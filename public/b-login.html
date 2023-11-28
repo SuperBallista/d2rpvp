@@ -1,33 +1,23 @@
+<!-- HTML 부분 수정 -->
 <html>
   <head>
     <link rel="icon" href="icon/favicon.ico" type="image/x-icon" />
-
     <title>디아블로2 babapk</title>
     <link rel="stylesheet" href="css/style.css" />
   </head>
   <body>
     <h1>로그인합니다</h1>
-
     <main>
-
-      <form
-      action="/process_login"
-      method="POST"
-      onsubmit="return regi()"
-      class="process_regi"
-    >
-      <p>닉네임</p>
-      <input type="text" class="nickname" name="nickname" required />
-      <p>암호</p>
-      <input type="password" class="newpw" name="password" required />
-      <input type="submit" value="로그인" class="register" />
-
-
+      <form id="loginForm" onsubmit="return loginUser()">
+        <p>닉네임</p>
+        <input type="text" class="nickname" name="nickname" required />
+        <p>암호</p>
+        <input type="password" class="newpw" name="password" required />
+        <input type="submit" value="로그인" class="register" />
+      </form>
     </main>
     <div class="findpw"><a href="b-findpw.html">계정찾기</a></div>
-
     <div class="mainlink"><a href="b-main.html">돌아가기</a></div>
-
     <script src="script/b-login.js"></script>
   </body>
 </html>

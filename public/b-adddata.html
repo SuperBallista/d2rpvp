@@ -45,7 +45,8 @@
               />
             </svg>
 
-            나의정보</a
+            <span class="shownickname">닉네임</span></a
+            </a
           >
         </div>
       </div>
@@ -209,75 +210,61 @@
       <form class="add-record">
         <p>승자 선택:</p>
         <select class="winner" name="winner">
-          <option value="null">선택하세요</option>
+          <option value=null>선택하세요</option>
         </select>
 
         <p>승자 팀원2:</p>
-        <select class="winner2" name="winner2">
-          <option disabled value="null">선택하세요</option>
+        <select disabled class="winner2" name="winner2">
+          <option value=null>선택하세요</option>
         </select>
 
         <p>승자 팀원3:</p>
-        <select class="winner3" name="winner3">
-          <option disabled value="null">선택하세요</option>
+        <select disabled class="winner3" name="winner3">
+          <option value=null>선택하세요</option>
         </select>
 
         <p>승자 팀원4:</p>
-        <select class="winner4" name="winner4">
-          <option disabled value="null">선택하세요</option>
+        <select disabled class="winner4" name="winner4">
+          <option value=null>선택하세요</option>
         </select>
 
         <p>패자 팀원2:</p>
-        <select class="loser2" name="loser2">
-          <option disabled value="null">선택하세요</option>
+        <select disabled class="loser2" name="loser2">
+          <option value=null>선택하세요</option>
         </select>
 
         <p>패자 팀원3:</p>
-        <select class="loser3" name="loser3">
-          <option disabled value="null">선택하세요</option>
+        <select disabled class="loser3" name="loser3">
+          <option value=null>선택하세요</option>
         </select>
 
         <p>패자 팀원4:</p>
-        <select class="loser4" name="loser4">
-          <option disabled value="null">선택하세요</option>
+        <select disabled class="loser4" name="loser4">
+          <option value=null>선택하세요</option>
         </select>
 
         <p>팀당 인원 선택하기</p>
         <select class="add-record__team" name="team">
-          <option value="null">선택하세요</option>
           <option value="1">1</option>
           <option value="2">2</option>
           <option value="3">3</option>
           <option value="4">4</option>
         </select>
-
-        <p>내가 사용한 무기 입력</p>
-        <select class="my-weapon-grade" name="my-weapon-grade">
-          <option value="grief">슬픔</option>
-          <option value="no-grief">비슬픔</option>
-        </select>
-
-        <p>승자가 사용한 무기 입력</p>
-        <select class="winner-weapon-grade" name="winner-weapon-grade">
-          <option value="grief">슬픔</option>
-          <option value="no-grief">비슬픔</option>
-        </select>
-
         <div class="winnerScore">
           <label>승자 점수:</label>
           <input
             type="number"
             name="winnerScore"
-            id="winnerScore"
+            class="winnerScore"
             readonly
             value="5"
           />
         </div>
         <div class="losserScore">
           <label>나의 점수:</label>
-          <input type="number" name="myScore" id="myScore" min="0" max="4" />
+          <input type="number" name="myScore" class="myScore" min="0" max="4" />
         </div>
-        <button type="submit" class="submitrecord">보내기</button>
+        <button type="button" class="submitrecord">보내기</button>
       </form>
     </main>
 
@@ -302,9 +289,8 @@
     </footer>
 
     <div class="regi-logout">
-      <p>로그인을 먼저 하세요</p>
+      <span>로그인을 먼저 하세요</span>
     </div>
-
     <script src="script/b-adddata.js"></script>
   </body>
 </html>
