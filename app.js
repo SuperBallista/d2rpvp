@@ -85,7 +85,7 @@ async function createTables() {
   } catch (error) {
     console.error('Error creating tables:', error);
   } finally {
-    connection.release();  // 수정된 부분: connection.release() 대신 connection.end() 사용
+    connection.release();  // 수정된 부분: connection.release() 사용
     pool.end();
   }
 }
