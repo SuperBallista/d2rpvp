@@ -112,7 +112,7 @@ app.post('/process_regi', async (req, res) => {
       [nickname, hashedPassword, email, wgrade, currentDate]
     );
 
-    pool.releaseConnection(connection);
+    connection.release();
 
     res.json({ success: true, message: '회원가입이 완료되었습니다.' });
   } catch (error) {
