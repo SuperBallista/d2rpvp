@@ -1,0 +1,9 @@
+.nav__menu svg{
+width: 50px;
+height: 50px;
+}
+
+.nav__logined svg, .nav__logouted svg{
+    width: 20px;
+    height: 20px;
+}

@@ -1,0 +1,26 @@
+<html>
+  <head>
+    <link rel="icon" href="icon/favicon.ico" type="image/x-icon" />
+
+    <title>디아블로2 babapk</title>
+    <link rel="stylesheet" href="css/style.css" />
+  </head>
+  <body>
+    <h1>계정을 찾으려면 등록한 이메일 주소를 입력하세요</h1>
+    <main class="changepwmain">
+      <form
+        action="/process_emailpw"
+        method="POST"
+        onsubmit="return emailpw()"
+        class="emailpw"
+      >
+        <p></p>
+        <input type="text" class="email" name="email" required />
+        <input type="submit" value="입력하기" class="changeok" />
+      </form>
+    </main>
+    <div class="mainlink"><a href="b-login.html">돌아가기</a></div>
+
+    <script src="script/b-findpw.js"></script>
+  </body>
+</html>

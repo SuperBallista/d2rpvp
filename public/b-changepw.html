@@ -1,0 +1,30 @@
+<html>
+  <head>
+    <link rel="icon" href="icon/favicon.ico" type="image/x-icon" />
+
+    <title>디아블로2 babapk</title>
+    <link rel="stylesheet" href="css/style.css" />
+  </head>
+  <body>
+    <h1>암호를 변경합니다</h1>
+    <main class="changepwmain">
+      <form
+        action="/process_changepw"
+        method="POST"
+        onsubmit="return changepw()"
+        class="changepw"
+      >
+        <p>현재 암호</p>
+        <input type="password" class="nowpw" name="password" required />
+        <p>새로운 암호</p>
+        <input type="password" class="newpw" name="password" required />
+        <p>새 암호 확인</p>
+        <input type="password" class="newpw-check" name="password" required />
+        <input type="submit" value="암호변경" class="changeok" />
+      </form>
+    </main>
+    <div class="mainlink"><a href="b-main.html">돌아가기</a></div>
+
+    <script src="script/b-changepw.js"></script>
+  </body>
+</html>

@@ -1,0 +1,25 @@
+<html>
+  <head>
+    <link rel="icon" href="icon/favicon.ico" type="image/x-icon" />
+
+    <title>디아블로2 babapk</title>
+    <link rel="stylesheet" href="css/style.css" />
+  </head>
+  <body>
+    <h1>이메일을 변경합니다</h1>
+    <main class="changeemailmain">
+        <form
+        action="/process_changepw"
+        method="POST"
+        onsubmit="return changepw()"
+        class="changepw"
+      >
+        <p>현재 암호</p>
+        <input type="password" class="nowpw" name="password" required />
+        <p>새 이메일주소</p>
+        <input type="text" class="newemail" name="newemail" required />
+        <input type="submit" value="이메일 변경" class="change-email-ok" />
+    </main>
+    <div class="mainlink"><a href="b-main.html">돌아가기</a></div>
+  </body>
+</html>
