@@ -31,13 +31,13 @@ app.use(express.static(__dirname + '/public'));
 app.use(bodyParser.json());
 
 
-// MariaDB 연결 풀 생성(로컬)
+// MariaDB 연결 풀 생성(클라우드)
 function createConnectionPool() {
   return mariadb.createPool({
-    host: 'svc.sel3.cloudtype.app:30907',
-    user: 'root',
-    password: 'd2rbvbpk',
-    database: 'd2rpvp',
+    host: 'd2rpvp',
+    user: 'ballista',
+    password: 'd2rpvppw',
+    database: 'd2rpvpdb',
     connectionLimit: 10,
   });
 }
