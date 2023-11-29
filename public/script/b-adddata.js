@@ -232,3 +232,127 @@ function checkForDuplicates(formDataObject) {
     // 중복된 값이 있다면 Set의 크기가 selectedValues의 길이와 다를 것
     return valueSet.size !== selectedValues.length;
 }
+
+// 비동기적으로 서버에서 데이터를 가져오는 함수
+async function fetchData() {
+  try {
+    const response = await fetch('no_approved_record');
+    const data = await response.json();
+    return data;
+  } catch (error) {
+    console.error('Error fetching data:', error);
+    return [];
+  }
+}
+
+
+
+
+
+
+
+// 데이터를 받아와서 HTML에 표시하는 함수
+async function displayData() {
+  const table = document.getElementById('scoreTable');
+  const data = await fetchData();
+
+  // 데이터를 반복하면서 각 행을 생성
+  data.forEach(rowData => {
+    const row = document.createElement('tr');
+    Object.values(rowData).forEach(value => {
+      const cell = document.createElement('td');
+      cell.textContent = value;
+      row.appendChild(cell);
+    });
+
+    // '승인'과 '삭제' 버튼 추가
+    const approveCell = document.createElement('td');
+    const approveButton = document.createElement('button');
+    approveButton.textContent = '승인';
+    approveButton.addEventListener('click', () => {
+      // '승인' 버튼 클릭 시 처리할 로직 추가
+      approveRecord(rowData.OrderNum);
+
+      console.log('승인 버튼 클릭:', rowData);
+    });
+    approveCell.appendChild(approveButton);
+
+    // '삭제' 버튼 추가
+    const deleteCell = document.createElement('td');
+    const deleteButton = document.createElement('button');
+    deleteButton.textContent = '삭제';
+    deleteButton.addEventListener('click', () => {
+
+      deleteRecord(rowData.OrderNum);
+
+      console.log('삭제 버튼 클릭:', rowData);
+    });
+    deleteCell.appendChild(deleteButton);
+
+    // '승인'과 '삭제' 버튼 열 추가
+    row.appendChild(approveCell);
+    row.appendChild(deleteCell);
+
+    // 테이블에 행 추가
+    table.appendChild(row);
+  });
+}
+
+
+// 삭제 버튼 클릭 시 /delete-record 엔드포인트 호출하는 함수
+async function deleteRecord(order) {
+  try {
+    console.log(order)
+    const response = await fetch('/delete-record', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({ orderNum: order }),
+      
+    });
+
+    if (response.ok) {
+      console.log('삭제 성공');
+      window.location.href = 'b-adddata.html';
+
+    } else {
+      console.error('삭제 실패');
+      // 실패 시에 대한 처리
+    }
+  } catch (error) {
+    console.error('삭제 요청 에러:', error);
+  }
+}
+
+
+// 승인 버튼 클릭 시 /approve-record 엔드포인트 호출하는 함수
+async function approveRecord(order) {
+  try {
+    console.log(order)
+    const response = await fetch('/approve-record', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({ orderNum: order }),
+      
+    });
+
+    if (response.ok) {
+      console.log('승인 성공');
+      window.location.href = 'b-adddata.html';
+
+    } else {
+      console.error('승인 실패');
+      // 실패 시에 대한 처리
+    }
+  } catch (error) {
+    console.error('승인 요청 에러:', error);
+  }
+}
+
+
+// 페이지 로드 시 데이터를 표시
+displayData();
+

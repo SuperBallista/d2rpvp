@@ -1,13 +1,12 @@
 const express = require('express');
 const session = require('express-session');
 const bodyParser = require('body-parser');
-const mariadb = require('mariadb');
+const mysql = require('mysql');
 const bcrypt = require('bcrypt');
 const moment = require('moment');
 
 const app = express();
 const port = 3000;
-
 
 // 기본 설정
 const startscore = 1000;
@@ -19,37 +18,34 @@ const score_bonus_percent = 0.5;
 const penaltyday = 2;
 const penalty_percent = 0.05;
 
-
 app.use(session({
   secret: 'asdlk329084', // 임의의 비밀 키
   resave: false,
   saveUninitialized: true,
 }));
 
-
 app.use(express.static(__dirname + '/public'));
 app.use(bodyParser.json());
 
 
-// MariaDB 연결 풀 생성(로컬)
-function createConnectionPool() {
-  return mariadb.createPool({
-    host: 'svc.sel3.cloudtype.app:30907',
+// Mysql 연결 생성(로컬)
+function createConnection() {
+  return mysql.createConnection({
+    host: 'svc.sel3.cloudtype.app',
     user: 'root',
     password: 'd2rbvbpk',
     database: 'd2rpvp',
-    connectionLimit: 10,
+    connectTimeout: 20000, // 타임아웃을 20초로 설정 (기본값은 10초)
   });
 }
 
-const pool = createConnectionPool(); // 전역으로 풀을 생성
+
 
 // 테이블 생성 함수
 async function createTables() {
-  let connection;
-  try {
-    connection = await pool.getConnection();
+  const connection = createConnection();
 
+  try {
     // b_user 테이블 생성
     const createUserTableQuery = `
       CREATE TABLE IF NOT EXISTS b_user (
@@ -68,7 +64,7 @@ async function createTables() {
     // b_record 테이블 생성
     const createRecordTableQuery = `
       CREATE TABLE IF NOT EXISTS b_record (
-        OrderNum INT PRIMARY KEY,
+        OrderNum INT AUTO_INCREMENT PRIMARY KEY,
         Date DATE,
         Winner VARCHAR(255),
         Loser VARCHAR(255),
@@ -108,28 +104,28 @@ async function createTables() {
   } catch (error) {
     console.error('Error creating tables:', error);
   } finally {
-    if (connection) {
-      connection.release();  
-    }
+    connection.end();
   }
 }
 
-// 새로운 엔드포인트 추가: POST /process_login
+// 테이블 생성 호출
+createTables();
+
+
+
+// 로그인 엔드포인트
 app.post('/process_login', async (req, res) => {
   const { nickname, password } = req.body;
-  console.log(nickname)
 
-  // MariaDB 연결 풀에서 연결 가져오기
-  const connection = await pool.getConnection(); // 기존 풀에서 연결 가져오기
+  // Mysql 연결에서 연결 가져오기
+  const connection = createConnection();
 
   try {
-
-    // 해당 닉네임의 사용자 정보를 데이터베이스에서 조회
     const result = await connection.query(
       'SELECT * FROM b_user WHERE Nickname = ?',
       [nickname]
     );
-console.log(result.length)
+
     if (result.length === 0) {
       // 사용자가 존재하지 않을 경우
       res.status(401).send('사용자가 존재하지 않습니다.');
@@ -146,7 +142,6 @@ console.log(result.length)
         nickname: nickname,
       };
       res.status(200).send('로그인 성공!');
-
     } else {
       // 비밀번호 불일치
       res.status(401).send('비밀번호가 일치하지 않습니다.');
@@ -155,14 +150,10 @@ console.log(result.length)
     console.error('데이터베이스 오류:', error);
     res.status(500).send('내부 서버 오류');
   } finally {
-    // 연결 반환 대신에 release만 호출
-    connection.release();
+    // 연결 종료
+    connection.end();
   }
 });
-
-// 테이블 생성 호출
-createTables();
-
 
 // 회원가입 엔드포인트
 app.post('/process_regi', async (req, res) => {
@@ -172,16 +163,14 @@ app.post('/process_regi', async (req, res) => {
     const hashedPassword = await bcrypt.hash(password, 10);
     const currentDate = moment().format('YYYY-MM-DD HH:mm:ss');
 
-    // 기존에 생성한 전역 풀을 사용
-    const connection = await pool.getConnection();
+    const connection = createConnection();
 
     const result = await connection.query(
       'INSERT INTO b_user (Nickname, PW, email, BScore, LScore, Class, Lastgame) VALUES (?, ?, ?, ?, ?, ?, ?)',
       [nickname, hashedPassword, email, startscore - (wgradebonus * (wgrade - 1)), wgradebonus * (wgrade - 1), wgrade, currentDate]
     );
 
-    // 연결 반환 대신에 release만 호출
-    connection.release();
+    connection.end();
 
     res.json({ success: true, message: '회원가입이 완료되었습니다.' });
   } catch (error) {
@@ -201,17 +190,13 @@ app.post('/check-nickname', async (req, res) => {
 
   let connection;
   try {
-    // 기존에 생성한 전역 풀을 사용
-    connection = await pool.getConnection();
-
+    connection = createConnection();
     const result = await connection.query(
       `SELECT COUNT(*) AS count FROM b_user WHERE Nickname = ?`,
       [requestedNickname]
     );
 
     const isNameAvailable = result[0].count === 0n;
-    console.log(result[0].count);
-    console.log(result);
     res.json({ isNameAvailable });
   } catch (error) {
     console.error('Database Error:', error);
@@ -222,7 +207,6 @@ app.post('/check-nickname', async (req, res) => {
     }
   }
 });
-
 
 
 // 세션 확인 엔드포인트
@@ -250,72 +234,38 @@ app.post('/logout', (req, res) => {
 });
 
 
-// 서버 루트 엔드포인트
+
+// 랭킹 조회 엔드포인트
 app.get('/rankdata', async (req, res) => {
   try {
-    // 기존에 생성한 전역 풀을 사용
-    const connection = await pool.getConnection();
-
-    console.log('1')
+    const connection = createConnection();
 
     // b_user 테이블에서 데이터 가져오기
-    const rankdb = await connection.query('SELECT Nickname, BScore, LScore, Class FROM b_user ORDER BY (BScore + LScore) DESC');
-    const winlose = await connection.query('SELECT winner, win2, win3, win4, loser, lose2, lose3, lose4 FROM b_record');
+    const rankdbResult = await connection.query('SELECT Nickname, BScore, LScore, Class FROM b_user ORDER BY (BScore + LScore) DESC');
+    const winloseResult = await connection.query('SELECT Winner, Win2, Win3, Win4, Loser, Lose2, Lose3, Lose4 FROM b_record');
+    
+    // rankdbResult와 winloseResult를 배열로 변환
+    const rankdb = Array.isArray(rankdbResult) ? rankdbResult : [rankdbResult];
+    const winlose = Array.isArray(winloseResult) ? winloseResult : [winloseResult];
 
-    console.log(rankdb)
-    console.log(winlose)
-    console.log('2')
-
-    // 딕셔너리를 만드는 함수
-    function createRecordWin(recordWin) {
-      const recordDictionary = {};
-
-      // recordData 배열을 순회하며 딕셔너리 생성
-      recordWin.forEach(record => {
-        const winners = [record.winner, record.win2, record.win3, record.win4];
-
-        winners.forEach(winner => {
-          if (winner in recordDictionary) {
-            recordDictionary[winner]++;
-          } else {
-            recordDictionary[winner] = 1;
-          }
-        });
+    // 닉네임 등장 빈도수를 세는 함수
+    function countOccurrences(records) {
+      const countDict = {};
+      records.flat().forEach(value => {
+        if (value !== undefined) {
+          countDict[value] = (countDict[value] || 0) + 1;
+        }
       });
-      console.log('3')
-      return recordDictionary;
+      return countDict;
     }
 
-    // 딕셔너리를 만드는 함수
-    function createRecordLose(recordLose) {
-      const recordDictionary = {};
-
-      // recordData 배열을 순회하며 딕셔너리 생성
-      recordLose.forEach(record => {
-        const losers = [record.Loser, record.lose2, record.lose3, record.lose4];
-
-        losers.forEach(loser => {
-          if (loser in recordDictionary) {
-            recordDictionary[loser]++;
-          } else {
-            recordDictionary[loser] = 1;
-          }
-        });
-      });
-      console.log('4')
-      return recordDictionary;
-    }
-
-    console.log(winlose)
-
-    const recordWin = createRecordWin(winlose);
-    const recordLose = createRecordLose(winlose);
-
-    console.log(recordWin, recordLose)
+    // winner, loser 빈도수 세기
+    const winCount = countOccurrences(winlose.map(record => [record.Winner, record.Win2, record.Win3, record.Win4]));
+    const loseCount = countOccurrences(winlose.map(record => [record.Loser, record.Lose2, record.Lose3, record.Lose4]));
 
     let result = [];
 
-    function createResultArray(rankdb, recordWin, recordLose) {
+    function createResultArray(rankdb, winCount, loseCount) {
       // rankdb 배열을 순회하며 각 열의 값을 계산하고 result에 추가
       rankdb.forEach((user, index) => {
         const row = [];
@@ -339,29 +289,24 @@ app.get('/rankdata', async (req, res) => {
         // 6. DB의 LScore
         row.push(user.LScore);
 
-        // 7. recordWin 딕셔너리에서 Nickname에 해당하는 숫자, 없으면 0
-        const wins = recordWin[user.Nickname] || 0;
+        // 7. winCount 딕셔너리에서 Nickname에 해당하는 숫자, 없으면 0
+        const wins = [winCount[user.Nickname], winCount[user.Nickname + "2"], winCount[user.Nickname + "3"], winCount[user.Nickname + "4"]].filter(win => win !== undefined).reduce((acc, cur) => acc + cur, 0) || 0;
         row.push(wins);
 
-        // 8. recordLose 딕셔너리에서 Nickname에 해당하는 숫자, 없으면 0
-        const losses = recordLose[user.Nickname] || 0;
+        // 8. loseCount 딕셔너리에서 Nickname에 해당하는 숫자, 없으면 0
+        const losses = [loseCount[user.Nickname], loseCount[user.Nickname + "2"], loseCount[user.Nickname + "3"], loseCount[user.Nickname + "4"]].filter(lose => lose !== undefined).reduce((acc, cur) => acc + cur, 0) || 0;
         row.push(losses);
 
         // 생성된 행을 result에 추가
         result.push(row);
       });
     }
-    console.log('5')
 
     // createResultArray 함수 호출
-    createResultArray(rankdb, recordWin, recordLose);
+    createResultArray(rankdb, winCount, loseCount);
 
-    // 결과 확인
-    console.log(result);
-    console.log('6')
-
-    // 연결 반환
-    connection.release();
+    // 연결 해제
+    connection.end();
 
     // 클라이언트에 데이터 응답
     res.json(result);
@@ -372,13 +317,13 @@ app.get('/rankdata', async (req, res) => {
 });
 
 
+
 // 서버에서 Nickname 목록을 가져오는 엔드포인트
 app.get('/api/getNicknames', async (req, res) => {
   try {
-    // 기존에 생성한 전역 풀을 사용
-    const connection = await pool.getConnection();
+    const connection = createConnection();
     const rows = await connection.query('SELECT Nickname FROM b_user');
-    connection.release();
+    connection.end();
 
     // Nickname 목록만 추출하여 응답
     const nicknames = rows.map((row) => row.Nickname);
@@ -392,15 +337,18 @@ app.get('/api/getNicknames', async (req, res) => {
 // 미승인 기록 보내기
 app.use(express.json());
 app.post('/submitrecord', async (req, res) => {
-    try {
+  try {
+
         // 패자의 점수가 올바르지 않은 경우 에러 처리
+        
         const Loserpoint = parseInt(req.body.myScore)
+
         if (Loserpoint < 0 || Loserpoint >= req.body.winnerScore) {
             throw new Error('패자의 점수가 올바르지 않습니다');
         }
 
-        // 기존에 생성한 전역 풀을 사용
-        const conn = await pool.getConnection();
+        // 데이터베이스 연결 풀에서 커넥션을 가져옴
+        const conn = createConnection();
 
         // 현재 날짜 구하기
         const currentDate = new Date().toISOString().slice(0, 10);
@@ -434,23 +382,23 @@ app.post('/submitrecord', async (req, res) => {
 
         // 쿼리 실행
         await conn.query(query, values);
+    // 커넥션 반환
+    conn.end();
 
-        // 커넥션 반환
-        conn.release();
-        console.log('ok');
-        res.status(200).json({ message: '데이터 전송에 성공하였습니다' });
-    } catch (error) {
-        console.error('Error adding record:', error);
-        res.status(500).json({ error: error.message || 'Internal Server Error' });
-    }
+    console.log('ok');
+    res.status(200).json({ message: '데이터 전송에 성공하였습니다' });
+  } catch (error) {
+    console.error('Error adding record:', error);
+    res.status(500).json({ error: error.message || 'Internal Server Error' });
+  }
 });
-
 
 // 백엔드에서 Mysql로부터 데이터를 불러오는 함수
 async function fetchDataFromDatabase(sessionNickName) {
-  const connection = await pool.getConnection(); // 기존 연결 대신 풀에서 연결 가져오기
+  const connection = createConnection();
 
   try {
+
     // 여기서 쿼리를 작성해서 데이터를 불러옵니다.
     const query = `
       SELECT OrderNum, Date, Loser, Win2, Win3, Win4, Lose2, Lose3, Lose4, WScore, LScore
@@ -468,9 +416,11 @@ async function fetchDataFromDatabase(sessionNickName) {
     console.error('Error fetching data from database:', error);
     return [];
   } finally {
-    connection.release(); // 사용이 끝난 연결을 다시 풀에 반환합니다.
+    connection.end(); // 연결 종료
   }
 }
+
+
 
 // 백엔드에서 데이터를 받아서 프론트에 전달
 app.get('/no_approved_record', async (req, res) => {
@@ -484,28 +434,23 @@ app.get('/no_approved_record', async (req, res) => {
   }
 });
 
-
-
 // 미승인 기록 삭제
 app.post('/delete-record', async (req, res) => {
   const orderNum = req.body.orderNum;
 
   if (!orderNum) {
-    console.log(orderNum)
-
     return res.status(400).json({ error: 'Invalid OrderNum' });
   }
 
-  let connection;
-  try {
-    connection = await pool.getConnection();
+  const connection = createConnection();
 
+  try {
     const updateQuery = `
       UPDATE b_temp
       SET Checked = 1
       WHERE OrderNum = ?;
     `;
-    console.log('updated')
+
     await connection.query(updateQuery, [orderNum]);
 
     res.status(200).json({ message: 'Record deleted successfully' });
@@ -513,13 +458,9 @@ app.post('/delete-record', async (req, res) => {
     console.error('Error updating record in database:', error);
     res.status(500).json({ error: 'Internal Server Error' });
   } finally {
-    if (connection) {
-      connection.release(); // 연결 반환
-    }
+    connection.end();
   }
 });
-
-
 
 // 승인 처리
 app.post('/approve-record', async (req, res) => {
@@ -529,7 +470,7 @@ app.post('/approve-record', async (req, res) => {
     return res.status(400).json({ error: 'Invalid OrderNum' });
   }
 
-  const connection = await pool.getConnection();
+  const connection = createConnection();
 
   try {
     // b_temp 테이블에서 Checked 값을 2로 업데이트
@@ -567,18 +508,15 @@ app.post('/approve-record', async (req, res) => {
       recordData.WScore,
       recordData.LScore
     ]);
-    console.log('approved2')
 
     const winner = recordData.winner
-    const loser = recordData.Loser
+    const loser = recordData.loser
     const lose2 = recordData.Lose2
     const lose3 = recordData.Lose3
     const lose4 = recordData.Lose4
     const win2 = recordData.Win2
     const win3 = recordData.Win3
     const win4 = recordData.Win4
-    const wscore = recordData.wscore
-    const lscore = recordData.lscore
     
 
 
@@ -623,36 +561,24 @@ app.post('/approve-record', async (req, res) => {
 
     
 let add_score = 0
-console.log('approved1')
-console.log(winnerBScore+win2BScore+win3BScore+win4BScore)
 switch(winnerBScore+win2BScore+win3BScore+win4BScore){
 case winnerBScore:
 add_score = (1+score_bonus_percent*(wscore-lscore-1))*k*(1-1/(10^((loserBScore-winnerBScore)/index)+1))
 winnerBScore = winnerBScore + add_score
 loserBScore = loserBScore - add_score*loser_score_percent
 
-const updateuserBScoreQuery = `
-  UPDATE b_user
-  SET BScore = ?
-  WHERE Nickname = ?;
-`;
-
-
 
 try {
-
-  await connection.query(updateuserBScoreQuery, [loserBScore, loser]);
-  console.log(`Loser의 BScore를 업데이트했습니다. 새로운 BScore: ${loserBScore}`);
-
+  loserBScore = await getLoserBScore(loser);
+  console.log(`Loser의 BScore: ${loserBScore}`);
 } catch (error) {
   console.error('Error getting loser BScore:', error);
   // 에러 처리 로직 추가
 }
 
 try {
-  await connection.query(updateuserBScoreQuery, [winnerBScore, winner]);
-  console.log(`Loser의 BScore를 업데이트했습니다. 새로운 BScore: ${winnerBScore}`);
-
+  winnerBScore = await getWinnerBScore(winner);
+  console.log(`Winner의 BScore: ${winnerBScore}`);
 } catch (error) {
   console.error('Error getting winner BScore:', error);
   // 에러 처리 로직 추가
@@ -749,7 +675,7 @@ try {
 
 
 try {
-  lose3BScore = await getLose3BScore(lose3);
+  lose3BScore = await getlose3BScore(lose3);
   console.log(`lose3의 BScore: ${lose3BScore}`);
 } catch (error) {
   console.error('Error getting lose3 BScore:', error);
@@ -814,7 +740,7 @@ default:
   
   
   try {
-    lose3BScore = await getLose3BScore(lose3);
+    lose3BScore = await getlose3BScore(lose3);
     console.log(`lose3의 BScore: ${lose3BScore}`);
   } catch (error) {
     console.error('Error getting lose3 BScore:', error);
@@ -830,7 +756,7 @@ default:
   }
   
   try {
-    lose4BScore = await getLose4BScore(lose4);
+    lose4BScore = await getlose4BScore(lose4);
     console.log(`lose4의 BScore: ${lose4BScore}`);
   } catch (error) {
     console.error('Error getting lose4 BScore:', error);
@@ -838,10 +764,10 @@ default:
   }
   
   try {
-    win4BScore = await getWinnerBScore(win4);
-    console.log(`win4의 BScore: ${win4BScore}`);
+    win3BScore = await getWinnerBScore(win3);
+    console.log(`win3의 BScore: ${win3BScore}`);
   } catch (error) {
-    console.error('Error getting win4 BScore:', error);
+    console.error('Error getting win3 BScore:', error);
     // 에러 처리 로직 추가
   }
   
@@ -857,13 +783,17 @@ res.status(200).json({ message: 'Record approved and moved to b_record successfu
   console.error('Error approving and moving record in database:', error);
   res.status(500).json({ error: 'Internal Server Error' });
 } finally {
-  connection.release();
+  connection.end();
 }
 });
 
 
 
 
+
+// 포트 확인
+
 app.listen(port, () => {
   console.log(`Server is running at http://localhost:${port}`);
 });
+
