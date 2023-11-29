@@ -13,6 +13,9 @@ const checkSession = async () => {
     nickname.textContent = userNickname;
     const hidelabel = document.querySelector('.nav__logouted');
     hidelabel.style.display = 'none';
+    const hidetext = document.querySelector('.regi-logout');
+    hidetext.style.display = 'none';
+
   } else {
     console.log('사용자는 로그인하지 않았습니다.');
     const hidelabel = document.querySelector('.nav__logined');
