@@ -17,6 +17,11 @@ const checkSession = async () => {
     console.log('사용자는 로그인하지 않았습니다.');
     const hidelabel = document.querySelector('.nav__logined');
     hidelabel.style.display = 'none';
+    const hideinput1 = document.querySelector('.add-record');
+    hideinput1.style.display = 'none';
+    const hideinput2 = document.querySelector('.record-approve');
+    hideinput2.style.display = 'none';
+
   }
   fillPlayerSelectBoxes(); // 세션 확인 후 fillPlayerSelectBoxes 호출
 
