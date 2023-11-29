@@ -6,6 +6,7 @@ const checkSession = async () => {
     if (data.isLoggedIn) {
       console.log('사용자는 로그인 상태입니다.');
       console.log('사용자 닉네임:', data.user.nickname);
+        window.location.href = 'b-main.html';
 
 }   };
   
