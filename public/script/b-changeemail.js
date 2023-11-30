@@ -15,7 +15,6 @@ function isValidEmail(email) {
   
     if (isValidEmail(newemail)) {
       console.log('email checked');
-      console.log(currentPassword);
   
       // 서버로 이메일 변경 요청 보내기
       try {
