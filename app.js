@@ -40,7 +40,7 @@ app.use(express.static(__dirname + '/public'));
 app.use(bodyParser.json());
 
 
-// MariaDB 연결 풀 생성(클라우드)
+// MariaDB 연결 풀 생성(로컬)
 function createConnectionPool() {
   return mariadb.createPool({
     host: 'd2rpvp',
@@ -1016,7 +1016,6 @@ if (result.length === 0) {
 const currentPasswordHash = result[0].pw;
 
 // 현재 암호 검증
-console.log(nowpw, currentPasswordHash)
 const passwordMatch = await bcrypt.compare(nowpw, currentPasswordHash);
 
 if (!passwordMatch) {
