@@ -4,6 +4,9 @@ const bodyParser = require('body-parser');
 const mariadb = require('mariadb');
 const bcrypt = require('bcrypt');
 const moment = require('moment');
+const nodemailer = require('nodemailer');
+const crypto = require('crypto');
+
 
 const app = express();
 const port = 3000;
@@ -40,7 +43,7 @@ app.use(express.static(__dirname + '/public'));
 app.use(bodyParser.json());
 
 
-// MariaDB 연결 풀 생성(로컬)
+// MariaDB 연결 풀 생성(클라우드)
 function createConnectionPool() {
   return mariadb.createPool({
     host: 'd2rpvp',
@@ -336,7 +339,13 @@ app.get('/rankdata', async (req, res) => {
         row.push(user.Nickname);
 
         // 3. DB의 Class
-        row.push(user.Class);
+let classname
+        if(Class='1'){
+          classname="슬픔"
+        }else{
+          classname="비슬픔"
+        }
+        row.push(classname);
 
         // 4. BScore + LScore
         const totalScore = user.BScore + user.LScore;
@@ -987,7 +996,7 @@ app.post('/process_changepw', async (req, res) => {
 
 
 
-
+// 이메일 변경 엔드 포인트
 app.post('/process_changeemail', async (req, res) => {
   try {
     console.log('이메일변경 요청 확인');
@@ -1037,6 +1046,76 @@ if (!passwordMatch) {
   }
 });
 
+
+
+
+// 임시 비밀번호 요청 엔드 포인트
+app.post('/process_emailpw', async (req, res) => {
+  try {
+    console.log('임시 암호 전송 확인 요청');
+
+
+    // 프론트엔드에서 전송한 이메일 및 암호 데이터
+    const { findpw_nickname, findpw_email } = req.body;
+
+
+// 사용자의 현재 이메일
+const connection = await pool.getConnection();
+const result = await connection.query('SELECT email FROM b_user WHERE Nickname = ?', [findpw_nickname]);
+connection.release();
+
+if (result.length === 0) {
+  console.log('사용자를 찾지 못함');
+  return res.status(404).json({ error: '사용자를 찾을 수 없습니다.' });
+}
+
+const correctemail = result[0].pw;
+
+// 이메일 비교
+
+if (!correctemail==findpw_email) {
+  return res.status(401).json({ error: 'Email error' });
+}
+
+
+    // 임시 비밀번호 발급
+    function generateRandomPassword(length) {
+      // 가능한 문자셋
+      const charset = 'abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
+    
+      let password = '';
+      for (let i = 0; i < length; i++) {
+        // charset에서 무작위 문자 선택
+        const randomIndex = Math.floor(Math.random() * charset.length);
+        password += charset[randomIndex];
+      }
+    
+      return password;
+    }
+    
+    // 10자리의 무작위 임시 비밀번호 생성
+    const temporaryPassword = generateRandomPassword(10);
+    
+
+    // 새로운 암호 해시 생성
+    const temporaryPasswordHash = await bcrypt.hash(temporaryPassword, 10);
+
+    // 새로운 암호로 업데이트
+    const temp_password_input = await connection.query('UPDATE b_user SET pw = ? WHERE Nickname = ?', [temporaryPasswordHash, findpw_nickname]);
+
+
+    if (temp_password_input.affectedRows === 1) {
+      console.log(temporaryPassword);
+      res.json({ success: true });
+    } else {
+      res.status(500).json({ error: '암호 업데이트에 실패했습니다.' });
+    }
+
+      } catch (error) {
+    console.error('이메일 변경 오류:', error);
+    res.status(500).json({ error: '서버 오류' });
+  }
+});
 
 
 
