@@ -40,7 +40,7 @@ app.use(express.static(__dirname + '/public'));
 app.use(bodyParser.json());
 
 
-// MariaDB 연결 풀 생성(로컬)
+// MariaDB 연결 풀 생성(클라우드)
 function createConnectionPool() {
   return mariadb.createPool({
     host: 'd2rpvp',
