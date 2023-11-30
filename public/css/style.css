@@ -2,3 +2,14 @@
 @import "nav.css";
 @import "index.css";
 @import "main.css";
+
+
+@font-face {
+    font-family: "diablo";
+    src: url(kodia.ttf);
+}
+
+body {background-color: black;
+    color: white;
+    font-family: 'diablo';
+}

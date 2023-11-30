@@ -1,4 +1,24 @@
 .mpk img, .babapk img{
     width: 150px;
     height: 150px;
+    display: block;
+}
+h2{
+margin: 30px;
+padding: 20px;
+font-size: 25px;
+text-align: center;
+
+}
+
+.indexmain{
+margin-top: 50px;    
+display: flex;
+justify-content: space-around;
+}
+
+.mpk span, .babapk span{
+font-size: 20px;
+text-align:center;
+
 }
