@@ -9,6 +9,15 @@ const app = express();
 const port = 3000;
 
 
+const updateuserBScoreQuery = `
+  UPDATE b_user
+  SET BScore = ?
+  WHERE Nickname = ?;
+`;
+
+
+
+
 // 기본 설정
 const startscore = 1000;
 const wgradebonus = 70;
@@ -31,7 +40,7 @@ app.use(express.static(__dirname + '/public'));
 app.use(bodyParser.json());
 
 
-// MariaDB 연결 풀 생성(클라우드)
+// MariaDB 연결 풀 생성(로컬)
 function createConnectionPool() {
   return mariadb.createPool({
     host: 'd2rpvp',
@@ -554,6 +563,8 @@ app.post('/approve-record', async (req, res) => {
       INSERT INTO b_record (Date, Winner, Loser, Win2, Win3, Win4, Lose2, Lose3, Lose4, WScore, LScore)
       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?);
     `;
+
+
     await connection.query(insertQuery, [
       recordData.Date,
       recordData.Winner,
@@ -565,11 +576,11 @@ app.post('/approve-record', async (req, res) => {
       recordData.Lose3,
       recordData.Lose4,
       recordData.WScore,
-      recordData.LScore
+      recordData.LScore,
     ]);
-    console.log('approved2')
+    console.log('approved1')
 
-    const winner = recordData.winner
+    const winner = recordData.Winner
     const loser = recordData.Loser
     const lose2 = recordData.Lose2
     const lose3 = recordData.Lose3
@@ -577,9 +588,10 @@ app.post('/approve-record', async (req, res) => {
     const win2 = recordData.Win2
     const win3 = recordData.Win3
     const win4 = recordData.Win4
-    const wscore = recordData.wscore
-    const lscore = recordData.lscore
+    const wscore = recordData.WScore
+    const lscore = recordData.LScore
     
+console.log(recordData.Winner, winner)    
 
 
 
@@ -591,6 +603,7 @@ app.post('/approve-record', async (req, res) => {
     `;
     const winnerBScoreResult = await connection.query(winnerBScoreQuery, [recordData.Winner]);
     let winnerBScore = winnerBScoreResult[0]?.BScore || 0;
+    console.log('approved2')
 
     // 함수를 통해 BScore 값을 가져오는 로직
     const getBScore = async (nickname) => {
@@ -623,7 +636,7 @@ app.post('/approve-record', async (req, res) => {
 
     
 let add_score = 0
-console.log('approved1')
+console.log('approved3')
 console.log(winnerBScore+win2BScore+win3BScore+win4BScore)
 switch(winnerBScore+win2BScore+win3BScore+win4BScore){
 case winnerBScore:
@@ -631,16 +644,9 @@ add_score = (1+score_bonus_percent*(wscore-lscore-1))*k*(1-1/(10^((loserBScore-w
 winnerBScore = winnerBScore + add_score
 loserBScore = loserBScore - add_score*loser_score_percent
 
-const updateuserBScoreQuery = `
-  UPDATE b_user
-  SET BScore = ?
-  WHERE Nickname = ?;
-`;
-
-
 
 try {
-
+console.log(add_score, wscore, lscore)
   await connection.query(updateuserBScoreQuery, [loserBScore, loser]);
   console.log(`Loser의 BScore를 업데이트했습니다. 새로운 BScore: ${loserBScore}`);
 
@@ -650,8 +656,9 @@ try {
 }
 
 try {
+  console.log(winner)
   await connection.query(updateuserBScoreQuery, [winnerBScore, winner]);
-  console.log(`Loser의 BScore를 업데이트했습니다. 새로운 BScore: ${winnerBScore}`);
+  console.log(`Winner의 WScore를 업데이트했습니다. 새로운 BScore: ${winnerBScore}`);
 
 } catch (error) {
   console.error('Error getting winner BScore:', error);
@@ -661,41 +668,54 @@ try {
 break;
 case winnerBScore+win2BScore:
 add_score = (1+score_bonus_percent*(wscore-lscore-1))*k*(1-1/(10^(((loserBScore+lose2BScore-winnerBScore-win2BScore)/2)/index)+1))
+winnerBScore = winnerBScore + add_score
+win2BScore = win2BScore + add_score
+loserBScore = loserBScore - add_score*loser_score_percent
+lose2BScore = lose2BScore - add_score*loser_score_percent
+
+
 
 
 try {
-  loserBScore = await getLoserBScore(loser);
-  console.log(`Loser의 BScore: ${loserBScore}`);
-} catch (error) {
-  console.error('Error getting loser BScore:', error);
-  // 에러 처리 로직 추가
-}
+    await connection.query(updateuserBScoreQuery, [loserBScore, loser]);
+    console.log(`Loser의 BScore를 업데이트했습니다. 새로운 BScore: ${loserBScore}`);
+  
+  } catch (error) {
+    console.error('Error getting loser BScore:', error);
+    // 에러 처리 로직 추가
+  }
+  
+  try {
+    await connection.query(updateuserBScoreQuery, [winnerBScore, winner]);
+    console.log(`Winner의 WScore를 업데이트했습니다. 새로운 BScore: ${winnerBScore}`);
+  
+  } catch (error) {
+    console.error('Error getting winner BScore:', error);
+    // 에러 처리 로직 추가
+  }
+  
 
-try {
-  winnerBScore = await getWinnerBScore(winner);
-  console.log(`Winner의 BScore: ${winnerBScore}`);
-} catch (error) {
-  console.error('Error getting winner BScore:', error);
-  // 에러 처리 로직 추가
-}
 
-
-try {
-  lose2BScore = await getLose2BScore(lose2);
-  console.log(`Lose2의 BScore: ${lose2BScore}`);
-} catch (error) {
-  console.error('Error getting lose2 BScore:', error);
-  // 에러 처리 로직 추가
-}
-
-try {
-  win2BScore = await getWinnerBScore(win2);
-  console.log(`Win2의 BScore: ${win2BScore}`);
-} catch (error) {
-  console.error('Error getting win2 BScore:', error);
-  // 에러 처리 로직 추가
-}
-
+  try {
+    console.log(add_score, wscore, lscore)
+      await connection.query(updateuserBScoreQuery, [lose2BScore, lose2]);
+      console.log(`Lose2의 BScore를 업데이트했습니다. 새로운 BScore: ${lose2BScore}`);
+    
+    } catch (error) {
+      console.error('Error getting lose2 BScore:', error);
+      // 에러 처리 로직 추가
+    }
+    
+    try {
+      await connection.query(updateuserBScoreQuery, [win2BScore, win2]);
+      console.log(`Win2의 WScore를 업데이트했습니다. 새로운 BScore: ${win2BScore}`);
+    
+    } catch (error) {
+      console.error('Error getting win2 BScore:', error);
+      // 에러 처리 로직 추가
+    }
+    
+  
 
 
 
@@ -712,62 +732,76 @@ break;
 case winnerBScore+win2BScore+win3BScore:
 add_score = (1+score_bonus_percent*(wscore-lscore-1))*k*(1-1/(10^(((loserBScore+lose2BScore+lose3BScore-winnerBScore-win2BScore-win3BScore)/3)/index)+1))
 
+winnerBScore = winnerBScore + add_score
+win2BScore = win2BScore + add_score
+win3BScore = win3BScore + add_score
+
+loserBScore = loserBScore - add_score*loser_score_percent
+lose2BScore = lose2BScore - add_score*loser_score_percent
+lose3BScore = lose3BScore - add_score*loser_score_percent
 
 
 try {
-  loserBScore = await getLoserBScore(loser);
-  console.log(`Loser의 BScore: ${loserBScore}`);
+  await connection.query(updateuserBScoreQuery, [loserBScore, loser]);
+  console.log(`Loser의 BScore를 업데이트했습니다. 새로운 BScore: ${loserBScore}`);
+
 } catch (error) {
   console.error('Error getting loser BScore:', error);
   // 에러 처리 로직 추가
 }
 
 try {
-  winnerBScore = await getWinnerBScore(winner);
-  console.log(`Winner의 BScore: ${winnerBScore}`);
+  await connection.query(updateuserBScoreQuery, [winnerBScore, winner]);
+  console.log(`Winner의 WScore를 업데이트했습니다. 새로운 BScore: ${winnerBScore}`);
+
 } catch (error) {
   console.error('Error getting winner BScore:', error);
   // 에러 처리 로직 추가
 }
 
 
-try {
-  lose2BScore = await getLose2BScore(lose2);
-  console.log(`Lose2의 BScore: ${lose2BScore}`);
-} catch (error) {
-  console.error('Error getting lose2 BScore:', error);
-  // 에러 처리 로직 추가
-}
-
-try {
-  win2BScore = await getWinnerBScore(win2);
-  console.log(`Win2의 BScore: ${win2BScore}`);
-} catch (error) {
-  console.error('Error getting win2 BScore:', error);
-  // 에러 처리 로직 추가
-}
 
 
 try {
-  lose3BScore = await getLose3BScore(lose3);
-  console.log(`lose3의 BScore: ${lose3BScore}`);
-} catch (error) {
-  console.error('Error getting lose3 BScore:', error);
-  // 에러 처리 로직 추가
-}
+  console.log(add_score, wscore, lscore)
+    await connection.query(updateuserBScoreQuery, [lose2BScore, lose2]);
+    console.log(`Lose2의 BScore를 업데이트했습니다. 새로운 BScore: ${lose2BScore}`);
+  
+  } catch (error) {
+    console.error('Error getting lose2 BScore:', error);
+    // 에러 처리 로직 추가
+  }
+  
+  try {
+    await connection.query(updateuserBScoreQuery, [win2BScore, win2]);
+    console.log(`Win2의 WScore를 업데이트했습니다. 새로운 BScore: ${win2BScore}`);
+  
+  } catch (error) {
+    console.error('Error getting winn2 BScore:', error);
+    // 에러 처리 로직 추가
+  }
+  
 
-try {
-  win3BScore = await getWinnerBScore(win3);
-  console.log(`win3의 BScore: ${win3BScore}`);
-} catch (error) {
-  console.error('Error getting win3 BScore:', error);
-  // 에러 처리 로직 추가
-}
 
-
-
-
-
+  try {
+    console.log(add_score, wscore, lscore)
+      await connection.query(updateuserBScoreQuery, [lose3BScore, lose3]);
+      console.log(`Lose3의 BScore를 업데이트했습니다. 새로운 BScore: ${lose3BScore}`);
+    
+    } catch (error) {
+      console.error('Error getting lose3 BScore:', error);
+      // 에러 처리 로직 추가
+    }
+    
+    try {
+      await connection.query(updateuserBScoreQuery, [win3BScore, win3]);
+      console.log(`Win3의 WScore를 업데이트했습니다. 새로운 BScore: ${win3BScore}`);
+    
+    } catch (error) {
+      console.error('Error getting win3 BScore:', error);
+      // 에러 처리 로직 추가
+    }
+    
 
 
 
@@ -775,79 +809,99 @@ try {
 
 break;
 default:
-  add_score = (1+score_bonus_percent*(wscore-lscore-1))*k*(1-1/(10^(((loserBScore+lose2BScore+lose3BScore+lose-winnerBScore-win2BScore-win3BScore-win4BScore)/4)/index)+1))
+  add_score = (1+score_bonus_percent*(wscore-lscore-1))*k*(1-1/(10^(((loserBScore+lose2BScore+lose3BScore+lose4BScore-winnerBScore-win2BScore-win3BScore-win4BScore)/4)/index)+1))
 
+  winnerBScore = winnerBScore + add_score
+  win2BScore = win2BScore + add_score
+  win3BScore = win3BScore + add_score
+  win4BScore = win4BScore + add_score
+
+  loserBScore = loserBScore - add_score*loser_score_percent
+  lose2BScore = lose2BScore - add_score*loser_score_percent
+  lose3BScore = lose3BScore - add_score*loser_score_percent
+  lose4BScore = lose4BScore - add_score*loser_score_percent
 
 
   try {
-    loserBScore = await getLoserBScore(loser);
-    console.log(`Loser의 BScore: ${loserBScore}`);
+    await connection.query(updateuserBScoreQuery, [loserBScore, loser]);
+    console.log(`Loser의 BScore를 업데이트했습니다. 새로운 BScore: ${loserBScore}`);
+  
   } catch (error) {
     console.error('Error getting loser BScore:', error);
     // 에러 처리 로직 추가
   }
   
   try {
-    winnerBScore = await getWinnerBScore(winner);
-    console.log(`Winner의 BScore: ${winnerBScore}`);
+    await connection.query(updateuserBScoreQuery, [winnerBScore, winner]);
+    console.log(`Winner의 WScore를 업데이트했습니다. 새로운 BScore: ${winnerBScore}`);
+  
   } catch (error) {
     console.error('Error getting winner BScore:', error);
     // 에러 처리 로직 추가
   }
   
   
-  try {
-    lose2BScore = await getLose2BScore(lose2);
-    console.log(`Lose2의 BScore: ${lose2BScore}`);
-  } catch (error) {
-    console.error('Error getting lose2 BScore:', error);
-    // 에러 처리 로직 추가
-  }
-  
-  try {
-    win2BScore = await getWinnerBScore(win2);
-    console.log(`Win2의 BScore: ${win2BScore}`);
-  } catch (error) {
-    console.error('Error getting win2 BScore:', error);
-    // 에러 처리 로직 추가
-  }
   
   
   try {
-    lose3BScore = await getLose3BScore(lose3);
-    console.log(`lose3의 BScore: ${lose3BScore}`);
-  } catch (error) {
-    console.error('Error getting lose3 BScore:', error);
-    // 에러 처리 로직 추가
-  }
+    console.log(add_score, wscore, lscore)
+      await connection.query(updateuserBScoreQuery, [lose2BScore, lose2]);
+      console.log(`Lose2의 BScore를 업데이트했습니다. 새로운 BScore: ${lose2BScore}`);
+    
+    } catch (error) {
+      console.error('Error getting lose2 BScore:', error);
+      // 에러 처리 로직 추가
+    }
+    
+    try {
+      await connection.query(updateuserBScoreQuery, [win2BScore, win2]);
+      console.log(`Win2의 WScore를 업데이트했습니다. 새로운 BScore: ${win2BScore}`);
+    
+    } catch (error) {
+      console.error('Error getting winn2 BScore:', error);
+      // 에러 처리 로직 추가
+    }
+    
   
-  try {
-    win3BScore = await getWinnerBScore(win3);
-    console.log(`win3의 BScore: ${win3BScore}`);
-  } catch (error) {
-    console.error('Error getting win3 BScore:', error);
-    // 에러 처리 로직 추가
-  }
   
-  try {
-    lose4BScore = await getLose4BScore(lose4);
-    console.log(`lose4의 BScore: ${lose4BScore}`);
-  } catch (error) {
-    console.error('Error getting lose4 BScore:', error);
-    // 에러 처리 로직 추가
-  }
+    try {
+      console.log(add_score, wscore, lscore)
+        await connection.query(updateuserBScoreQuery, [lose3BScore, lose3]);
+        console.log(`Lose3의 BScore를 업데이트했습니다. 새로운 BScore: ${lose3BScore}`);
+      
+      } catch (error) {
+        console.error('Error getting lose3 BScore:', error);
+        // 에러 처리 로직 추가
+      }
+      
+      try {
+        await connection.query(updateuserBScoreQuery, [win3BScore, win3]);
+        console.log(`Win3의 WScore를 업데이트했습니다. 새로운 BScore: ${win3BScore}`);
+      
+      } catch (error) {
+        console.error('Error getting win3 BScore:', error);
+        // 에러 처리 로직 추가
+      }
+      
   
-  try {
-    win4BScore = await getWinnerBScore(win4);
-    console.log(`win4의 BScore: ${win4BScore}`);
-  } catch (error) {
-    console.error('Error getting win4 BScore:', error);
-    // 에러 처리 로직 추가
-  }
-  
-
-
-
+      try {
+        console.log(add_score, wscore, lscore)
+          await connection.query(updateuserBScoreQuery, [lose4BScore, lose4]);
+          console.log(`Lose4의 BScore를 업데이트했습니다. 새로운 BScore: ${lose4BScore}`);
+        
+        } catch (error) {
+          console.error('Error getting lose4 BScore:', error);
+          // 에러 처리 로직 추가
+        }
+        
+        try {
+          await connection.query(updateuserBScoreQuery, [win4BScore, win4]);
+          console.log(`Win4의 WScore를 업데이트했습니다. 새로운 BScore: ${win4BScore}`);
+        
+        } catch (error) {
+          console.error('Error getting win4 BScore:', error);
+          // 에러 처리 로직 추가
+        }
 
 }
 
@@ -860,6 +914,130 @@ res.status(200).json({ message: 'Record approved and moved to b_record successfu
   connection.release();
 }
 });
+
+
+// 서버 레코드 데이터 가져오는 엔드포인트
+app.get('/recorddata', async (req, res) => {
+  try {
+    // 기존에 생성한 전역 풀을 사용
+    const connection = await pool.getConnection();
+
+    // b_record 테이블에서 데이터 가져오기
+    const allrecord = await connection.query('SELECT Date, Winner, win2, win3, win4, loser, lose2, lose3, lose4, wscore, lscore FROM b_record');
+    connection.release();
+    console.log(allrecord)
+    res.json(allrecord)
+  } catch (error) {
+    console.error('기록 불러오기 실패:', error);
+    res.status(500).json({ error: '서버 오류' });
+  }
+});
+
+
+
+// 암호 변경 엔드포인트
+app.post('/process_changepw', async (req, res) => {
+  try {
+    console.log('암호변경 요청 확인')
+    // 세션에서 사용자 정보 가져오기
+    const user = req.session.user;
+
+    if (!user) {
+      return res.status(401).json({ error: '로그인이 필요합니다.' });
+    }
+
+    // 프론트엔드에서 전송한 암호 데이터
+    const { nowpw, newpw } = req.body;
+
+    // 사용자의 현재 암호 확인
+    const connection = await pool.getConnection();
+    const result = await connection.query('SELECT pw FROM b_user WHERE Nickname = ?', [user.nickname]);
+    connection.release();
+
+    if (result.length === 0) {
+      console.log('사용자를 찾지 못함')
+      return res.status(404).json({ error: '사용자를 찾을 수 없습니다.' });
+    }
+
+    const currentPasswordHash = result[0].pw;
+
+    // 현재 암호 검증
+    const passwordMatch = await bcrypt.compare(nowpw, currentPasswordHash);
+
+    if (!passwordMatch) {
+      return res.status(401).json({ error: '현재 암호가 일치하지 않습니다.' });
+    }
+
+    // 새로운 암호 해시 생성
+    const newPasswordHash = await bcrypt.hash(newpw, 10);
+
+    // 새로운 암호로 업데이트
+    const updateResult = await connection.query('UPDATE b_user SET pw = ? WHERE Nickname = ?', [newPasswordHash, user.nickname]);
+
+    if (updateResult.affectedRows === 1) {
+      res.json({ success: true });
+    } else {
+      res.status(500).json({ error: '암호 업데이트에 실패했습니다.' });
+    }
+  } catch (error) {
+    console.error('암호 변경 오류:', error);
+    res.status(500).json({ error: '서버 오류' });
+  }
+});
+
+
+
+
+app.post('/process_changeemail', async (req, res) => {
+  try {
+    console.log('이메일변경 요청 확인');
+
+    // 세션에서 사용자 정보 가져오기
+    const user = req.session.user;
+
+    if (!user) {
+      return res.status(401).json({ error: '로그인이 필요합니다.' });
+    }
+
+    // 프론트엔드에서 전송한 이메일 및 암호 데이터
+    const { nowpw, newemail } = req.body;
+
+
+// 사용자의 현재 암호 확인
+const connection = await pool.getConnection();
+const result = await connection.query('SELECT pw FROM b_user WHERE Nickname = ?', [user.nickname]);
+connection.release();
+
+if (result.length === 0) {
+  console.log('사용자를 찾지 못함');
+  return res.status(404).json({ error: '사용자를 찾을 수 없습니다.' });
+}
+
+const currentPasswordHash = result[0].pw;
+
+// 현재 암호 검증
+console.log(nowpw, currentPasswordHash)
+const passwordMatch = await bcrypt.compare(nowpw, currentPasswordHash);
+
+if (!passwordMatch) {
+  return res.status(401).json({ error: '현재 암호가 일치하지 않습니다.' });
+}
+
+
+    // 새로운 이메일로 업데이트
+    const updateResult = await connection.query('UPDATE b_user SET email = ? WHERE Nickname = ?', [newemail, user.nickname]);
+
+    if (updateResult.affectedRows === 1) {
+      res.json({ success: true });
+    } else {
+      res.status(500).json({ error: '이메일 업데이트에 실패했습니다.' });
+    }
+  } catch (error) {
+    console.error('이메일 변경 오류:', error);
+    res.status(500).json({ error: '서버 오류' });
+  }
+});
+
 
 
 
