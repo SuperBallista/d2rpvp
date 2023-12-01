@@ -1,0 +1,85 @@
+.add-record div{
+    margin:10px 0;
+    padding: 10px 0;
+}
+
+.main_with_nav__option{
+    display: flex;
+    justify-content: center;
+border-radius: 15px;
+background-color: #444C;
+margin:0 28%;
+border: white 5px solid;
+
+}
+
+.add-record select{
+font-size: 25px;
+border:none;
+background-color: #444C;
+color: white;
+padding: 5px;
+border-radius: 5px;
+}
+
+.add-record__scoreinput{
+display: flex;
+justify-content: space-evenly;
+}
+.add-record__scoreinput div{
+margin: 0px 5px;
+
+}
+
+.add-record__team{
+width: 90px;
+
+}
+
+.add-record__scoreinput input{
+    font-size: 25px;
+    border:none;
+    background-color: #444C;
+    color: white;
+    padding: 5px;
+    border-radius: 5px;
+    width: 120px;
+
+}
+
+.add-record__send{
+    text-align: right;
+}
+
+.submitrecord{
+    font-size: 25px;
+    border:white solid 5px;
+    background-color: #444C;
+    color: white;
+    padding: 5px;
+    border-radius: 5px;
+    width: 120px;
+}
+
+.submitrecord:hover{
+color:yellow;
+border: yellow solid 5px;
+transform: scale(1.3);
+}
+
+.score-table button{
+    font-size: 20px;
+    border:white solid 2px;
+    background-color: #333;
+    color: white;
+    padding: 5px;
+    border-radius: 10px;
+
+}
+.score-table button:hover{
+    color:yellow;
+    border: yellow solid 5px;
+    transform: scale(1.4);
+    
+
+}

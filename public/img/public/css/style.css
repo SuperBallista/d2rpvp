@@ -1,0 +1,116 @@
+@import "reset.css";
+@import "nav.css";
+@import "index.css";
+@import "main.css";
+@import "table.css";
+@import "adddata.css";
+@import "input.css";
+@import "mypage.css";
+@import "changepw.css";
+
+
+@font-face {
+    font-family: "diablo";
+    src: url(kodia.ttf);
+}
+
+body {background-color: black;
+    color: white;
+    font-family: 'diablo';
+    background-image: url(../img/bgimg.png);
+    background-repeat: no-repeat;
+    background-position-x: center;
+    text-align: center;
+}
+
+.main_with_nav{
+text-align: left;
+margin: 5% 0 20% 0;    
+}
+
+footer{
+margin: -15% 0 20% 0;
+
+}
+
+.main_with_nav{
+font-size: 30px;
+padding: 0 5%;
+text-align: left;
+}
+
+h1{
+font-size: 70px;
+text-align: center;
+margin: 30px 0;
+padding: 20px;
+display: inline;
+border-radius: 30px;
+background-color: #444D;
+border: 5px white solid;
+}
+
+h4{
+margin-top: 5%;
+margin-bottom: 40px;
+font-size: 50px;
+
+}
+
+h5{
+    font-size: 35px;
+    text-align: center;
+    margin: 15px 36%;
+    border: white 5px solid;
+
+
+border-radius: 30px;
+background-color: #444D;
+padding: 20px;
+
+}
+
+.changepw, .changeemail, .mainlink{
+font-size: 20px;
+
+}
+
+.main_without_nav{
+display: flex;
+justify-content: center;
+text-align: center;
+}
+
+.mydata{
+    display: flex;
+    justify-content: center;
+   
+}
+
+.mydata__table{
+margin: 25px;
+
+}
+.mydata__table th{
+border-right: solid white 3px;    
+    }
+
+.regi-logout{
+margin-top: -10%;
+font-size: 40px;
+font-weight: 900;
+}
+
+
+.mainlink{
+background-color: #444D;
+padding: 10px;
+font-size: 30px;
+border-radius: 15px;
+margin:20px 45%;
+}
+
+.mainlink:hover{
+color:yellow;
+transform: scale(1.3);
+}

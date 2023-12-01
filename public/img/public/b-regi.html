@@ -1,0 +1,51 @@
+<html>
+  <head>
+    <link rel="icon" href="icon/favicon.ico" type="image/x-icon" />
+
+    <title>디아블로2 babapk</title>
+    <link rel="stylesheet" href="css/style.css" />
+  </head>
+  <body>
+    <h4>새 계정을 등록합니다</h4>
+
+    <main class="b-regi">
+      <form
+        action="/process_regi"
+        method="POST"
+        onsubmit="return regi()"
+        class="process_regi"
+      >
+        <span class="label">닉네임</span>
+        <input type="text" class="nickname" name="nickname" required /><br />
+        <input
+          type="button"
+          value="중복 확인"
+          class="namecheck"
+          name="namecheck"
+        /><br />
+        <span class="label">암호</span>
+        <input type="password" class="newpw" name="password" required /><br />
+        <span class="label">암호 확인</span>
+        <input
+          type="password"
+          class="newpwcheck"
+          name="password"
+          required
+        /><br />
+        <span class="label">이메일 주소</span>
+        <input type="text" class="email" name="email" required /><br />
+        <span class="label">사용 무기:</span>
+        <select class="wgrade" name="wgrade">
+          <option value="1">슬픔</option>
+          <option value="2">비슬픔</option></select
+        ><br />
+
+        <input type="submit" value="등록하기" class="register" disabled />
+      </form>
+    </main>
+
+    <div class="mainlink"><a href="b-main.html">돌아가기</a></div>
+
+    <script src="script/b-regi.js"></script>
+  </body>
+</html>

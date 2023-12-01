@@ -1,0 +1,14 @@
+
+.changepw, .changeemail{
+    background-color: #444D;
+    padding: 10px;
+    font-size: 30px;
+    border-radius: 15px;
+    margin:20px 45%;
+    }
+    .changepw:hover, .changeemail:hover{
+        color:yellow;
+        transform: scale(1.3);
+
+
+    }

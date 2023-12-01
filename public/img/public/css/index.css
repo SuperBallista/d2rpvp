@@ -1,0 +1,49 @@
+.mpk img, .babapk img{
+    margin: 35px;
+    width: 350px;
+    height: 350px;
+    display: block;
+    border-radius: 20%;
+    border: solid 5px whitesmoke;
+}
+h2{
+margin: 40px 20%;
+padding: 20px;
+font-size: 45px;
+text-align: center;
+border: solid 10px whitesmoke;
+background-color: #444C;
+border-radius: 20px;
+
+}
+
+h3{
+    font-size: 30px;
+    text-align: center;
+    display: block;
+    margin: 30px 35%;
+    padding: 25px;
+    background-color: #444C;
+    border-radius: 30px;
+    border: white solid 5px;
+}
+
+
+.indexmain{
+margin-top: 50px;    
+display: flex;
+justify-content: center;
+}
+
+.mpk, .babapk{
+text-align:center;
+font-size: 30px;
+}
+
+.mpk:hover, .babapk:hover{
+color: yellow;
+    transform: scale(1.4);
+}
+    
+
+
