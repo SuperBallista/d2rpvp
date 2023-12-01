@@ -205,51 +205,52 @@
       </div>
     </div>
     <!-- 메인 영역 -->
-    <h1>결과 등록하기</h1>
-    <main>
+    <h1>대전 기록 추가하기</h1>
+    <main class="main_with_nav">
+      <h5>기록 승인 요청하기</h5>
+      <div class="main_with_nav__option">
       <form class="add-record">
-        <p>승자 선택:</p>
+        <div class="add-record__select1">승자 선택 : 
         <select class="winner" name="winner">
           <option value=null>선택하세요</option>
         </select>
 
-        <p>승자 팀원2:</p>
+        팀당 인원 선택:
+          <select class="add-record__team" name="team">
+            <option value="1">1</option>
+            <option value="2">2</option>
+            <option value="3">3</option>
+            <option value="4">4</option>
+          </select></div>
+
+        <div class="add-record__select2">승자 팀원2:
         <select disabled class="winner2" name="winner2">
           <option value=null>선택하세요</option>
         </select>
 
-        <p>승자 팀원3:</p>
+        승자 팀원3:
         <select disabled class="winner3" name="winner3">
           <option value=null>선택하세요</option>
-        </select>
+        </select></div>
 
-        <p>승자 팀원4:</p>
+        <div class="add-record__select4">승자 팀원4:
         <select disabled class="winner4" name="winner4">
           <option value=null>선택하세요</option>
         </select>
-
-        <p>패자 팀원2:</p>
+패자 팀원2:
         <select disabled class="loser2" name="loser2">
           <option value=null>선택하세요</option>
-        </select>
+        </select></div>
 
-        <p>패자 팀원3:</p>
+        <div class="add-record__select6">패자 팀원3:
         <select disabled class="loser3" name="loser3">
           <option value=null>선택하세요</option>
         </select>
-
-        <p>패자 팀원4:</p>
+패자 팀원4:
         <select disabled class="loser4" name="loser4">
           <option value=null>선택하세요</option>
-        </select>
-
-        <p>팀당 인원 선택하기</p>
-        <select class="add-record__team" name="team">
-          <option value="1">1</option>
-          <option value="2">2</option>
-          <option value="3">3</option>
-          <option value="4">4</option>
-        </select>
+        </select></div>
+<div class="add-record__scoreinput">
         <div class="winnerScore">
           <label>승자 점수:</label>
           <input
@@ -260,16 +261,19 @@
             value="5"
           />
         </div>
-        <div class="losserScore">
+        <div class="loserScore">
           <label>나의 점수:</label>
           <input type="number" name="myScore" class="myScore" min="0" max="4" />
-        </div>
-        <button type="button" class="submitrecord">보내기</button>
+        </div></div>
+        <div class="add-record__send">
+        <button type="button" class="submitrecord">보내기</button></div>
       </form>
+      </div>
     </main>
 
     <footer class="record-approve">
-      <h1>결과 승인하기</h1>
+      <h5>대전 기록 승인하기</h5>
+      <div class="main_with_nav__table">
       <table class="score-table" id="scoreTable">
         <tr>
           <th>경기번호</th>
@@ -286,10 +290,11 @@
           <th>승인</th>
         </tr>
       </table>
+      </div>
     </footer>
 
     <div class="regi-logout">
-      <span>로그인을 먼저 하세요</span>
+      <span class="regi-logout__text">로그인을 해야합니다</span>
     </div>
     <script src="script/b-adddata.js"></script>
   </body>

@@ -2,3 +2,12 @@
    width: 30px;
    height: 30px; 
 }
+
+
+td img{
+   width: 30px;
+   height: 30px;
+   border-radius: 15px;
+   border: gray solid 3px;
+   
+       }

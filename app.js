@@ -4,13 +4,13 @@ const bodyParser = require('body-parser');
 const mariadb = require('mariadb');
 const bcrypt = require('bcrypt');
 const moment = require('moment');
-const nodemailer = require('nodemailer');
 const crypto = require('crypto');
 
 
 const app = express();
 const port = 3000;
 
+let shortdate
 
 const updateuserBScoreQuery = `
   UPDATE b_user
@@ -43,7 +43,7 @@ app.use(express.static(__dirname + '/public'));
 app.use(bodyParser.json());
 
 
-// MariaDB 연결 풀 생성(클라우드)
+// MariaDB 연결 풀 생성(로컬)
 function createConnectionPool() {
   return mariadb.createPool({
     host: 'd2rpvp',
@@ -339,13 +339,7 @@ app.get('/rankdata', async (req, res) => {
         row.push(user.Nickname);
 
         // 3. DB의 Class
-let classname
-        if(Class='1'){
-          classname="슬픔"
-        }else{
-          classname="비슬픔"
-        }
-        row.push(classname);
+        row.push(user.Class);
 
         // 4. BScore + LScore
         const totalScore = user.BScore + user.LScore;
@@ -435,8 +429,10 @@ app.post('/submitrecord', async (req, res) => {
 
         // OrderNum은 AUTO_INCREMENT로 자동 증가하므로 따로 명시하지 않음
         // Checked에는 0을 넣어줌
+
+
         const values = [
-            currentDate,
+          currentDate,
             req.body.winner,
             userNickname, // 사용자의 닉네임을 Winner에 넣음
             req.body.winner2,
@@ -924,7 +920,6 @@ res.status(200).json({ message: 'Record approved and moved to b_record successfu
 }
 });
 
-
 // 서버 레코드 데이터 가져오는 엔드포인트
 app.get('/recorddata', async (req, res) => {
   try {
@@ -934,14 +929,25 @@ app.get('/recorddata', async (req, res) => {
     // b_record 테이블에서 데이터 가져오기
     const allrecord = await connection.query('SELECT Date, Winner, win2, win3, win4, loser, lose2, lose3, lose4, wscore, lscore FROM b_record');
     connection.release();
-    console.log(allrecord)
-    res.json(allrecord)
+
+    // 날짜 형식 포맷 변경
+    const formattedRecords = allrecord.map(record => {
+      return {
+        ...record,
+        Date: new Intl.DateTimeFormat('en-US', {
+          year: 'numeric',
+          month: '2-digit',
+          day: '2-digit'
+        }).format(new Date(record.Date))
+      };
+    });
+
+    res.json(formattedRecords);
   } catch (error) {
     console.error('기록 불러오기 실패:', error);
     res.status(500).json({ error: '서버 오류' });
   }
 });
-
 
 
 // 암호 변경 엔드포인트
@@ -1113,6 +1119,59 @@ if (!correctemail==findpw_email) {
 
       } catch (error) {
     console.error('이메일 변경 오류:', error);
+    res.status(500).json({ error: '서버 오류' });
+  }
+});
+
+
+// 사용자 정보를 반환하는 엔드포인트
+app.get('/user_data', async (req, res) => {
+  try {
+    // 세션에서 사용자 정보 가져오기
+    const user = req.session.user;
+
+    if (!user) {
+      return res.status(401).json({ error: '로그인이 필요합니다.' });
+    }
+
+    // 사용자 정보 쿼리
+    const connection = await pool.getConnection();
+    const userResult = await connection.query('SELECT * FROM b_user WHERE Nickname = ?', [user.nickname]);
+
+    if (userResult.length === 0) {
+      connection.release();
+      return res.status(404).json({ error: '사용자를 찾을 수 없습니다.' });
+    }
+
+    // 사용자 전적 쿼리
+    const recordResult = await connection.query(`
+      SELECT
+        COUNT(*) AS countwin,
+        (SELECT COUNT(*) FROM b_record WHERE loser = ? OR lose2 = ? OR lose3 = ? OR lose4 = ?) AS countlose
+      FROM b_record
+      WHERE winner = ? OR win2 = ? OR win3 = ? OR win4 = ?
+    `, [user.nickname, user.nickname, user.nickname, user.nickname, user.nickname, user.nickname, user.nickname, user.nickname]);
+
+    connection.release();
+
+    
+    // BigInt를 문자열로 변환
+    const userData = {
+      nickname: user.nickname,
+      email: userResult[0].email,
+      tscore: (userResult[0].BScore + userResult[0].LScore).toString(),
+      bscore: userResult[0].BScore.toString(),
+      lscore: userResult[0].LScore.toString(),
+      lastdate: userResult[0].Lastgame,
+      weapon: userResult[0].Class,
+      countwin: recordResult[0].countwin.toString(),
+      countlose: recordResult[0].countlose.toString(),
+      countrecord: (recordResult[0].countwin + recordResult[0].countlose).toString(),
+    };
+    
+    res.json(userData);
+  } catch (error) {
+    console.error('사용자 정보 가져오기 오류:', error);
     res.status(500).json({ error: '서버 오류' });
   }
 });

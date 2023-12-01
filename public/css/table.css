@@ -1,0 +1,27 @@
+
+.main_with_nav__table{
+    display: flex;
+    justify-content: center;
+    }
+    
+    
+    tr, th, .record-table td{
+    border: 3px white solid;
+    }
+    
+    th, td, tr{
+        padding: 3px;
+        text-align: center;
+    font-size: 25px;
+    background-color: #444d;
+    padding: 10px;
+
+    }
+
+    td img{
+width: 30px;
+height: 30px;
+border-radius: 15px;
+border: gray solid 3px;
+
+    }

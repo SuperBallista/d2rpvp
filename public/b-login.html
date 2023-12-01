@@ -6,15 +6,25 @@
     <link rel="stylesheet" href="css/style.css" />
   </head>
   <body>
-    <h1>로그인합니다</h1>
+    <h4>로그인합니다</h4>
     <main>
-      <form id="loginForm" onsubmit="return loginUser()">
-        <p>닉네임</p>
-        <input type="text" class="nickname" name="nickname" required />
-        <p>암호</p>
-        <input type="password" class="newpw" name="password" required />
-        <input type="submit" value="로그인" class="register" />
-      </form>
+      <div class="login-div">
+        <form id="loginForm" onsubmit="return loginUser()">
+          <span
+            >계정 <input type="text" class="nickname" name="nickname" required
+          /></span>
+          <span
+            >암호
+            <input
+              type="password"
+              class="newpw"
+              name="password"
+              required /></span
+          ><span>
+            <input type="submit" value="로그인" class="login-button"
+          /></span>
+        </form>
+      </div>
     </main>
     <div class="findpw"><a href="b-findpw.html">계정찾기</a></div>
     <div class="mainlink"><a href="b-main.html">돌아가기</a></div>

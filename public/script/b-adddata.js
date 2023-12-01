@@ -24,6 +24,10 @@ const checkSession = async () => {
     hideinput1.style.display = 'none';
     const hideinput2 = document.querySelector('.record-approve');
     hideinput2.style.display = 'none';
+    const hideinput3 = document.querySelector('h5');
+    hideinput3.style.display = 'none';
+    const hideinput4 = document.querySelector('.main_with_nav__option');
+    hideinput4.style.display = 'none';
 
   }
   fillPlayerSelectBoxes(); // 세션 확인 후 fillPlayerSelectBoxes 호출
@@ -248,9 +252,6 @@ async function fetchData() {
 
 
 
-
-
-
 // 데이터를 받아와서 HTML에 표시하는 함수
 async function displayData() {
   const table = document.getElementById('scoreTable');
@@ -259,39 +260,48 @@ async function displayData() {
   // 데이터를 반복하면서 각 행을 생성
   data.forEach(rowData => {
     const row = document.createElement('tr');
-    Object.values(rowData).forEach(value => {
+
+    // Object.entries를 사용하여 키-값 쌍 순회
+    Object.entries(rowData).forEach(([key, value]) => {
       const cell = document.createElement('td');
+
+      // 날짜 데이터의 경우 형식 변경
+      if (key === 'Date') {
+        value = new Intl.DateTimeFormat('en-US', {
+          year: 'numeric',
+          month: '2-digit',
+          day: '2-digit'
+        }).format(new Date(value));
+      }
+
       cell.textContent = value;
       row.appendChild(cell);
     });
 
-    // '승인'과 '삭제' 버튼 추가
-    const approveCell = document.createElement('td');
+    // '승인'과 '삭제' 버튼 컨테이너 열 추가
+    const buttonsCell = document.createElement('td');
+
+    // '승인' 버튼 추가
     const approveButton = document.createElement('button');
     approveButton.textContent = '승인';
     approveButton.addEventListener('click', () => {
       // '승인' 버튼 클릭 시 처리할 로직 추가
       approveRecord(rowData.OrderNum);
-
       console.log('승인 버튼 클릭:', rowData);
     });
-    approveCell.appendChild(approveButton);
+    buttonsCell.appendChild(approveButton);
 
     // '삭제' 버튼 추가
-    const deleteCell = document.createElement('td');
     const deleteButton = document.createElement('button');
     deleteButton.textContent = '삭제';
     deleteButton.addEventListener('click', () => {
-
       deleteRecord(rowData.OrderNum);
-
       console.log('삭제 버튼 클릭:', rowData);
     });
-    deleteCell.appendChild(deleteButton);
+    buttonsCell.appendChild(deleteButton);
 
     // '승인'과 '삭제' 버튼 열 추가
-    row.appendChild(approveCell);
-    row.appendChild(deleteCell);
+    row.appendChild(buttonsCell);
 
     // 테이블에 행 추가
     table.appendChild(row);

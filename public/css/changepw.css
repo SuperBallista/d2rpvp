@@ -1,0 +1,11 @@
+
+.nowpw__div, .newpw__div, .newpw__check{
+    padding: 10px;
+    font-size: 30px;
+    
+    }
+
+.changeok:hover{
+    color:yellow;
+    transform: scale(1.3);
+}

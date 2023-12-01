@@ -6,13 +6,16 @@
     <link rel="stylesheet" href="css/style.css" />
   </head>
   <body>
-    <h1>계정을 찾으려면 닉네임과 등록한 이메일 주소를 입력하세요</h1>
+    <h4>닉네임과 등록한 이메일 주소를 입력하세요</h4>
     <main class="changepwmain">
       <form action="/process_emailpw" method="POST" class="emailpw">
-        <p>닉네임</p>
-        <input type="text" class="nickname" name="nickname" required />
-        <p>이메일</p>
-        <input type="text" class="email" name="email" required />
+        <div class="changepw__nickname">
+          닉네임
+          <input type="text" class="nickname" name="nickname" required />
+        </div>
+        <div class="changepw__email">
+          이메일 <input type="text" class="email" name="email" required />
+        </div>
         <input type="submit" value="확인" class="changeok" />
       </form>
     </main>

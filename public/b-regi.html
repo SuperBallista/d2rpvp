@@ -6,7 +6,7 @@
     <link rel="stylesheet" href="css/style.css" />
   </head>
   <body>
-    <h1>새 계정을 등록합니다</h1>
+    <h4>새 계정을 등록합니다</h4>
 
     <main class="b-regi">
       <form
@@ -15,25 +15,30 @@
         onsubmit="return regi()"
         class="process_regi"
       >
-        <p>닉네임</p>
-        <input type="text" class="nickname" name="nickname" required />
+        <span class="label">닉네임</span>
+        <input type="text" class="nickname" name="nickname" required /><br />
         <input
           type="button"
           value="중복 확인"
           class="namecheck"
           name="namecheck"
-        />
-        <p>암호</p>
-        <input type="password" class="newpw" name="password" required />
-        <p>암호 확인</p>
-        <input type="password" class="newpwcheck" name="password" required />
-        <p>이메일 주소</p>
-        <input type="text" class="email" name="email" required />
-        <p>사용 무기:</p>
+        /><br />
+        <span class="label">암호</span>
+        <input type="password" class="newpw" name="password" required /><br />
+        <span class="label">암호 확인</span>
+        <input
+          type="password"
+          class="newpwcheck"
+          name="password"
+          required
+        /><br />
+        <span class="label">이메일 주소</span>
+        <input type="text" class="email" name="email" required /><br />
+        <span class="label">사용 무기:</span>
         <select class="wgrade" name="wgrade">
           <option value="1">슬픔</option>
-          <option value="2">비슬픔</option>
-        </select>
+          <option value="2">비슬픔</option></select
+        ><br />
 
         <input type="submit" value="등록하기" class="register" disabled />
       </form>
