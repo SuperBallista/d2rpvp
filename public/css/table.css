@@ -17,3 +17,8 @@
     padding: 10px;
 
     }
+
+    tr:hover{
+font-weight: 900;
+color:skyblue;
+}
