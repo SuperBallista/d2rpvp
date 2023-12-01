@@ -80,7 +80,7 @@ async function createTables() {
     // b_record 테이블 생성
     const createRecordTableQuery = `
       CREATE TABLE IF NOT EXISTS b_record (
-        OrderNum INT PRIMARY KEY,
+        OrderNum INT AUTO_INCREMENT PRIMARY KEY,
         Date DATE,
         Winner VARCHAR(255),
         Loser VARCHAR(255),
