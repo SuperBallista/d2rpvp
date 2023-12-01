@@ -50,7 +50,7 @@ function addDataToTable(table, rowData, index, totalRows) {
       cell.appendChild(img);
     } else if (columnIndex === 2) {
       // 3번째 열의 값을 기준으로 "슬픔" 또는 "비슬픔"으로 표시
-      cell.textContent = cellData;
+      cell.textContent = cellData === 1 ? "슬픔" : "비슬픔";
     } else {
       cell.textContent = cellData;
     }

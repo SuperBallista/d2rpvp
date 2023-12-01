@@ -43,7 +43,8 @@ app.use(express.static(__dirname + '/public'));
 app.use(bodyParser.json());
 
 
-// MariaDB 연결 풀 생성(로컬)
+
+// MariaDB 연결 풀 생성(클라우드)
 function createConnectionPool() {
   return mariadb.createPool({
     host: 'd2rpvp',
@@ -304,7 +305,7 @@ app.get('/rankdata', async (req, res) => {
 
       // recordData 배열을 순회하며 딕셔너리 생성
       recordLose.forEach(record => {
-        const losers = [record.Loser, record.lose2, record.lose3, record.lose4];
+        const losers = [record.loser, record.lose2, record.lose3, record.lose4];
 
         losers.forEach(loser => {
           if (loser in recordDictionary) {
@@ -1017,7 +1018,6 @@ app.post('/process_changeemail', async (req, res) => {
     // 프론트엔드에서 전송한 이메일 및 암호 데이터
     const { nowpw, newemail } = req.body;
 
-
 // 사용자의 현재 암호 확인
 const connection = await pool.getConnection();
 const result = await connection.query('SELECT pw FROM b_user WHERE Nickname = ?', [user.nickname]);
@@ -1111,14 +1111,14 @@ if (!correctemail==findpw_email) {
 
 
     if (temp_password_input.affectedRows === 1) {
-      console.log(temporaryPassword);
+      console.log(findpw_nickname, temporaryPassword);
       res.json({ success: true });
     } else {
       res.status(500).json({ error: '암호 업데이트에 실패했습니다.' });
     }
 
       } catch (error) {
-    console.error('이메일 변경 오류:', error);
+    console.error('서버 오류:', error);
     res.status(500).json({ error: '서버 오류' });
   }
 });

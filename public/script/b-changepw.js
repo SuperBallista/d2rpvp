@@ -1,5 +1,5 @@
 // 폼 submit 이벤트 리스너 등록
-document.querySelector('.changepw').addEventListener('submit', async function (event) {
+document.querySelector('.changepwform').addEventListener('submit', async function (event) {
     event.preventDefault(); // 기본 폼 제출 동작 막기
   
     // 폼 요소 값 가져오기

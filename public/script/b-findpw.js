@@ -36,7 +36,7 @@ function isValidEmail(email) {
         console.log(result); // 서버에서의 응답 로그
   
         // 이메일로 암호 요청 성공시 사용자에게 알림
-        alert('임시 비밀번호를 생성했습니다');
+        alert('임시 비밀번호를 생성했습니다. 관리자에게 문의 바랍니다.');
         window.location.href = 'b-main.html';
       } catch (error) {
         console.error('암호 전송 요청 오류', error);

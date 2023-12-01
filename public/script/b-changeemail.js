@@ -6,13 +6,13 @@ function isValidEmail(email) {
   }
   
   // 폼 submit 이벤트 리스너 등록
-  document.querySelector('.changeemail').addEventListener('submit', async function (event) {
+  document.querySelector('.changeemail-form').addEventListener('submit', async function (event) {
     event.preventDefault(); // 기본 폼 제출 동작 막기
   
     // 폼 요소 값 가져오기
     const currentPassword = document.querySelector('.nowpw').value;
     const newemail = document.querySelector('.newemail').value;
-  
+
     if (isValidEmail(newemail)) {
       console.log('email checked');
   
