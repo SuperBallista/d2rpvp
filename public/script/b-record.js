@@ -44,11 +44,12 @@ const updateUI = () => {
   const hidelabel = document.querySelector('.nav__logouted');
   const adminRemove = document.querySelector('.admin-remove');
   const hidelabel2 = document.querySelector('.nav__logined');
-
+  const adminshow = document.querySelector('.nav__logined__admin');
   if (userNickname) {
     // 사용자가 로그인 상태
     hidelabel.style.display = 'none';
     adminRemove.style.display = userNickname === 'admin' ? 'block' : 'none';
+    adminshow.style.display = userNickname === 'admin' ? 'block' : 'none';
   } else {
     // 사용자가 로그아웃 상태
     hidelabel.style.display = 'flex';
