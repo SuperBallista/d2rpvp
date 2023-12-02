@@ -58,6 +58,9 @@ function createConnectionPool() {
 }
 
 
+
+
+
 const pool = createConnectionPool(); // 전역으로 풀을 생성
 
 
@@ -149,23 +152,26 @@ async function createTables() {
 }
 
 
-
 // 새로운 엔드포인트 추가: POST /process_login
 app.post('/process_login', async (req, res) => {
   const { nickname, password } = req.body;
-  console.log(nickname)
+  console.log(nickname);
 
   // MariaDB 연결 풀에서 연결 가져오기
   const connection = await pool.getConnection(); // 기존 풀에서 연결 가져오기
 
   try {
+    // 입력 받은 닉네임을 소문자로 변환
+    const lowerCaseNickname = nickname.toLowerCase();
 
     // 해당 닉네임의 사용자 정보를 데이터베이스에서 조회
     const result = await connection.query(
       'SELECT * FROM b_user WHERE Nickname = ?',
-      [nickname]
+      [lowerCaseNickname]
     );
-console.log(result.length)
+
+    console.log(result.length);
+
     if (result.length === 0) {
       // 사용자가 존재하지 않을 경우
       res.status(401).send('사용자가 존재하지 않습니다.');
@@ -179,10 +185,9 @@ console.log(result.length)
     if (isPasswordValid) {
       // 로그인 성공
       req.session.user = {
-        nickname: nickname,
+        nickname: lowerCaseNickname, // 소문자로 된 닉네임 저장
       };
       res.status(200).send('로그인 성공!');
-
     } else {
       // 비밀번호 불일치
       res.status(401).send('비밀번호가 일치하지 않습니다.');
@@ -195,6 +200,7 @@ console.log(result.length)
     connection.release();
   }
 });
+
 
 // 테이블 생성 호출
 createTables();
@@ -211,9 +217,12 @@ app.post('/process_regi', async (req, res) => {
     // 기존에 생성한 전역 풀을 사용
     const connection = await pool.getConnection();
 
+    // 닉네임을 소문자로 변환
+    const lowerCaseNickname = nickname.toLowerCase();
+
     const result = await connection.query(
       'INSERT INTO b_user (Nickname, PW, email, BScore, LScore, Class, Lastgame) VALUES (?, ?, ?, ?, ?, ?, ?)',
-      [nickname, hashedPassword, email, startscore - (wgradebonus * (wgrade - 1)), wgradebonus * (wgrade - 1), wgrade, currentDate]
+      [lowerCaseNickname, hashedPassword, email, startscore - (wgradebonus * (wgrade - 1)), wgradebonus * (wgrade - 1), wgrade, currentDate]
     );
 
     // 연결 반환 대신에 release만 호출
@@ -225,6 +234,7 @@ app.post('/process_regi', async (req, res) => {
     res.status(500).json({ success: false, error: 'Internal Server Error' });
   }
 });
+
 
 // 클라이언트에서 보낸 닉네임 중복 확인 요청을 처리
 app.post('/check-nickname', async (req, res) => {
@@ -1420,8 +1430,47 @@ console.log('상대전적 보내기 확인')
 });
 
 
+// 대전 점수를 리셋하는 엔드포인트
+app.post('/reset-score-endpoint', async (req, res) => {
+  try {
+    // MariaDB 연결 풀에서 연결 가져오기
+    const connection = await pool.getConnection();
+
+    // Class가 1인 경우 BScore를 1000으로, Class가 2인 경우 BScore를 930으로 업데이트
+    await connection.query('UPDATE b_user SET BScore = CASE WHEN Class = 1 THEN 1000 WHEN Class = 2 THEN 930 END');
+
+    // B_record에서 winner에 해당하는 행을 찾아 BScore 업데이트
+    await connection.query(`
+      UPDATE b_user
+      SET BScore = BScore + IFNULL(
+        (SELECT SUM(AddScore) FROM b_record WHERE winner = b_user.Nickname OR win2 = b_user.Nickname OR win3 = b_user.Nickname OR win4 = b_user.Nickname),
+        0
+      )
+    `);
+
+    // B_record에서 loser에 해당하는 행을 찾아 BScore 업데이트
+    await connection.query(`
+      UPDATE b_user
+      SET BScore = BScore - IFNULL(
+        (SELECT SUM(AddScore * ?) FROM b_record WHERE loser = b_user.Nickname OR lose2 = b_user.Nickname OR lose3 = b_user.Nickname OR lose4 = b_user.Nickname),
+        0
+      )
+    `, [loser_score_percent]);
+
+    // 연결 반환 대신에 release만 호출
+   
+    connection.release();
+
+    res.json({ success: true, message: '대전점수가 재계산되었습니다.' });
+  } catch (error) {
+    console.error('데이터베이스 오류:', error);
+    res.status(500).json({ success: false, error: 'Internal Server Error' });
+  }
+});
 
 
+
+// 서버 시작
 app.listen(port, () => {
-  console.log(`Server is running at http://localhost:${port}`);
+  console.log(`Server is running on port ${port}`);
 });
