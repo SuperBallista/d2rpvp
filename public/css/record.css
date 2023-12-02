@@ -1,0 +1,19 @@
+
+.opp-record-div{
+    margin: -3% 0 0 66%;
+width: 360px;
+    padding: 10px;
+    background-color: #444D;
+    border-radius: 15px;
+
+    }
+    
+    
+    .opp-record-div svg{
+        width: 30px;
+        height: 30px;
+    }
+    .opp-record-div span{
+    font-size: 30px;
+    }
+    

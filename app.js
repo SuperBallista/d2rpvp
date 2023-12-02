@@ -18,6 +18,7 @@ const updateuserBScoreQuery = `
   WHERE Nickname = ?;
 `;
 
+const todaydate = moment().format('YYYY-MM-DD HH:mm:ss');
 
 
 
@@ -30,6 +31,7 @@ const loser_score_percent = 0.9;
 const score_bonus_percent = 0.5;
 const penaltyday = 2;
 const penalty_percent = 0.05;
+
 
 
 app.use(session({
@@ -55,7 +57,10 @@ function createConnectionPool() {
   });
 }
 
+
 const pool = createConnectionPool(); // 전역으로 풀을 생성
+
+
 
 // 테이블 생성 함수
 async function createTables() {
@@ -78,6 +83,21 @@ async function createTables() {
     await connection.query(createUserTableQuery);
     console.log('b_user Table created successfully');
 
+    // Create admin user
+    const adminNickname = 'admin';
+    const adminPassword = 'admin_pw'; // You can set a stronger password
+    const adminEmail = 'kor8240@gmail.com';
+    
+    const hashedAdminPassword = await bcrypt.hash(adminPassword, 10);
+
+    const insertAdminUserQuery = `
+      INSERT INTO b_user (Nickname, PW, email, BScore, LScore, Class, Lastgame)
+      VALUES (?, ?, ?, 0, 0, 0, ?)
+    `;
+    await connection.query(insertAdminUserQuery, [adminNickname, hashedAdminPassword, adminEmail, todaydate]);
+    console.log('Admin user created successfully');
+
+
     // b_record 테이블 생성
     const createRecordTableQuery = `
       CREATE TABLE IF NOT EXISTS b_record (
@@ -92,7 +112,8 @@ async function createTables() {
         Lose3 VARCHAR(255),
         Lose4 VARCHAR(255),
         WScore INT,
-        LScore INT
+        LScore INT,
+        AddScore FLOAT
       )
     `;
     await connection.query(createRecordTableQuery);
@@ -126,6 +147,8 @@ async function createTables() {
     }
   }
 }
+
+
 
 // 새로운 엔드포인트 추가: POST /process_login
 app.post('/process_login', async (req, res) => {
@@ -269,15 +292,13 @@ app.get('/rankdata', async (req, res) => {
     // 기존에 생성한 전역 풀을 사용
     const connection = await pool.getConnection();
 
-    console.log('1')
+    console.log('rankdata를 불러오기 위해 풀을 연결했습니다')
 
     // b_user 테이블에서 데이터 가져오기
-    const rankdb = await connection.query('SELECT Nickname, BScore, LScore, Class FROM b_user ORDER BY (BScore + LScore) DESC');
+    const rankdb = await connection.query('SELECT Nickname, BScore, LScore, Class FROM b_user WHERE Nickname != "admin" ORDER BY (BScore + LScore) DESC');
     const winlose = await connection.query('SELECT winner, win2, win3, win4, loser, lose2, lose3, lose4 FROM b_record');
 
-    console.log(rankdb)
-    console.log(winlose)
-    console.log('2')
+    console.log('rankdata를 불러오기 위해 데이터를 가져옵니다')
 
     // 딕셔너리를 만드는 함수
     function createRecordWin(recordWin) {
@@ -390,7 +411,7 @@ app.get('/api/getNicknames', async (req, res) => {
   try {
     // 기존에 생성한 전역 풀을 사용
     const connection = await pool.getConnection();
-    const rows = await connection.query('SELECT Nickname FROM b_user');
+    const rows = await connection.query('SELECT Nickname FROM b_user WHERE Nickname != "admin"');
     connection.release();
 
     // Nickname 목록만 추출하여 응답
@@ -571,6 +592,16 @@ app.post('/approve-record', async (req, res) => {
     `;
 
 
+    // b_record 테이블에 변화값 삽입
+    const changedscorerecord = `
+    UPDATE b_record
+    SET AddScore = ?
+    WHERE OrderNum = (
+      SELECT MAX(OrderNum)
+      FROM b_record
+    );
+    `;
+
     await connection.query(insertQuery, [
       recordData.Date,
       recordData.Winner,
@@ -597,7 +628,6 @@ app.post('/approve-record', async (req, res) => {
     const wscore = recordData.WScore
     const lscore = recordData.LScore
     
-console.log(recordData.Winner, winner)    
 
 
 
@@ -651,8 +681,19 @@ winnerBScore = winnerBScore + add_score
 loserBScore = loserBScore - add_score*loser_score_percent
 
 
+
+
 try {
-console.log(add_score, wscore, lscore)
+  await connection.query(changedscorerecord, [add_score]);
+  console.log(`대전기록에 변화값 기록 ${add_score}`);
+
+} catch (error) {
+  console.error('Error setting add_score:', error);
+  // 에러 처리 로직 추가
+}
+
+
+try {
   await connection.query(updateuserBScoreQuery, [loserBScore, loser]);
   console.log(`Loser의 BScore를 업데이트했습니다. 새로운 BScore: ${loserBScore}`);
 
@@ -681,6 +722,15 @@ lose2BScore = lose2BScore - add_score*loser_score_percent
 
 
 
+try {
+  await connection.query(changedscorerecord, [add_score]);
+  console.log(`대전기록에 변화값 기록 ${add_score}`);
+
+} catch (error) {
+  console.error('Error setting add_score:', error);
+  // 에러 처리 로직 추가
+}
+
 
 try {
     await connection.query(updateuserBScoreQuery, [loserBScore, loser]);
@@ -703,7 +753,6 @@ try {
 
 
   try {
-    console.log(add_score, wscore, lscore)
       await connection.query(updateuserBScoreQuery, [lose2BScore, lose2]);
       console.log(`Lose2의 BScore를 업데이트했습니다. 새로운 BScore: ${lose2BScore}`);
     
@@ -748,6 +797,15 @@ lose3BScore = lose3BScore - add_score*loser_score_percent
 
 
 try {
+  await connection.query(changedscorerecord, [add_score]);
+  console.log(`대전기록에 변화값 기록 ${add_score}`);
+
+} catch (error) {
+  console.error('Error setting add_score:', error);
+  // 에러 처리 로직 추가
+}
+
+try {
   await connection.query(updateuserBScoreQuery, [loserBScore, loser]);
   console.log(`Loser의 BScore를 업데이트했습니다. 새로운 BScore: ${loserBScore}`);
 
@@ -769,7 +827,6 @@ try {
 
 
 try {
-  console.log(add_score, wscore, lscore)
     await connection.query(updateuserBScoreQuery, [lose2BScore, lose2]);
     console.log(`Lose2의 BScore를 업데이트했습니다. 새로운 BScore: ${lose2BScore}`);
   
@@ -790,7 +847,6 @@ try {
 
 
   try {
-    console.log(add_score, wscore, lscore)
       await connection.query(updateuserBScoreQuery, [lose3BScore, lose3]);
       console.log(`Lose3의 BScore를 업데이트했습니다. 새로운 BScore: ${lose3BScore}`);
     
@@ -827,6 +883,16 @@ default:
   lose3BScore = lose3BScore - add_score*loser_score_percent
   lose4BScore = lose4BScore - add_score*loser_score_percent
 
+  
+try {
+  await connection.query(changedscorerecord, [add_score]);
+  console.log(`대전기록에 변화값 기록 ${add_score}`);
+
+} catch (error) {
+  console.error('Error setting add_score:', error);
+  // 에러 처리 로직 추가
+}
+
 
   try {
     await connection.query(updateuserBScoreQuery, [loserBScore, loser]);
@@ -850,7 +916,6 @@ default:
   
   
   try {
-    console.log(add_score, wscore, lscore)
       await connection.query(updateuserBScoreQuery, [lose2BScore, lose2]);
       console.log(`Lose2의 BScore를 업데이트했습니다. 새로운 BScore: ${lose2BScore}`);
     
@@ -871,7 +936,6 @@ default:
   
   
     try {
-      console.log(add_score, wscore, lscore)
         await connection.query(updateuserBScoreQuery, [lose3BScore, lose3]);
         console.log(`Lose3의 BScore를 업데이트했습니다. 새로운 BScore: ${lose3BScore}`);
       
@@ -891,7 +955,6 @@ default:
       
   
       try {
-        console.log(add_score, wscore, lscore)
           await connection.query(updateuserBScoreQuery, [lose4BScore, lose4]);
           console.log(`Lose4의 BScore를 업데이트했습니다. 새로운 BScore: ${lose4BScore}`);
         
@@ -928,7 +991,7 @@ app.get('/recorddata', async (req, res) => {
     const connection = await pool.getConnection();
 
     // b_record 테이블에서 데이터 가져오기
-    const allrecord = await connection.query('SELECT Date, Winner, win2, win3, win4, loser, lose2, lose3, lose4, wscore, lscore FROM b_record');
+    const allrecord = await connection.query('SELECT OrderNum, Date, Winner, win2, win3, win4, loser, lose2, lose3, lose4, wscore, lscore, AddScore FROM b_record');
     connection.release();
 
     // 날짜 형식 포맷 변경
@@ -1172,6 +1235,186 @@ app.get('/user_data', async (req, res) => {
     res.json(userData);
   } catch (error) {
     console.error('사용자 정보 가져오기 오류:', error);
+    res.status(500).json({ error: '서버 오류' });
+  }
+});
+
+
+
+
+// 어드민 점수 부여 엔드포인트
+app.post('/submit-admin-score', async (req, res) => {
+  const adminright = req.session.user.nickname; // 세션에 저장된 닉네임이 관리자인지 확인
+  const player = req.body.player;
+  const adminscore = req.body.playerScore;
+  console.log(adminright)
+
+  if (adminright!=='admin') {
+
+    return res.status(400).json({ message: '권한이 없습니다' });
+  }
+
+
+  let connection;
+  try {
+    connection = await pool.getConnection();
+
+    const updateScoreQuery = `
+      UPDATE b_user
+      SET LScore = LScore + ?
+      WHERE Nickname = ?;
+    `;
+    console.log('updated')
+    await connection.query(updateScoreQuery, [adminscore, player]);
+
+    res.status(200).json({ message: 'Lscore update successfully' });
+  } catch (error) {
+    console.error('Error updating record in database:', error);
+    res.status(500).json({ error: 'Internal Server Error' });
+  } finally {
+    if (connection) {
+      connection.release(); // 연결 반환
+    }
+  }
+});
+
+
+
+
+
+// 정의되지 않은 변수를 상단에 추가
+const updateBScoreQuery1 = `
+  UPDATE b_user
+  SET BScore = BScore - ?  -- subtract AddScore for winners
+  WHERE Nickname IN (?, ?, ?, ?);
+`;
+
+const updateBScoreQuery2 = `
+  UPDATE b_user
+  SET BScore = BScore + ?  -- add AddScore for losers
+  WHERE Nickname IN (?, ?, ?, ?);
+`;
+
+//승인된 기록 삭제하기
+
+app.delete('/delete-row', async (req, res) => {
+
+  const adminright = req.session.user.nickname; // 세션에 저장된 닉네임이 관리자인지 확인
+  const player = req.body.player;
+  const adminscore = req.body.playerScore;
+  console.log(adminright)
+
+  if (adminright!=='admin') {
+
+    return res.status(400).json({ message: '권한이 없습니다' });
+  }
+
+
+
+
+  try {
+    const orderNum = req.body.orderNum;
+
+    // Fetch the row data from b_record using OrderNum
+    const connection = await pool.getConnection();
+    const selectRecordQuery = `
+      SELECT Winner, Win2, Win3, Win4, Loser, Lose2, Lose3, Lose4, AddScore
+      FROM b_record
+      WHERE OrderNum = ?;
+    `;
+    const recordRow = await connection.query(selectRecordQuery, [orderNum]);
+    connection.release();
+
+    if (recordRow.length === 0) {
+      return res.status(404).json({ error: 'Row not found' });
+    }
+
+    // Start a transaction
+    const connection2 = await pool.getConnection();
+    await connection2.beginTransaction();
+
+    try {
+      const winnerNicknames = [recordRow[0].Winner, recordRow[0].Win2, recordRow[0].Win3, recordRow[0].Win4];
+      const loserNicknames = [recordRow[0].Loser, recordRow[0].Lose2, recordRow[0].Lose3, recordRow[0].Lose4];
+
+      // Execute the first update query within the transaction for winners
+      await connection2.query(updateBScoreQuery1, [
+        recordRow[0].AddScore,
+        ...winnerNicknames,
+      ]);
+
+      // Execute the second update query within the transaction for losers
+      await connection2.query(updateBScoreQuery2, [
+        // Modify the calculation for losers using loser_score_percent
+        recordRow[0].AddScore * loser_score_percent,
+        ...loserNicknames,
+      ]);
+
+      // Delete the row from b_record
+      const deleteRecordQuery = `
+        DELETE FROM b_record
+        WHERE OrderNum = ?;
+      `;
+      await connection2.query(deleteRecordQuery, [orderNum]);
+
+      // Commit the transaction
+      await connection2.commit();
+      connection2.release();
+
+      res.status(200).json({ message: 'Row deleted successfully' });
+    } catch (error) {
+      // Rollback the transaction in case of an error
+      await connection2.rollback();
+      connection2.release();
+      throw error;
+    }
+
+  } catch (error) {
+    console.error('삭제 오류:', error);
+    res.status(500).json({ error: 'Internal Server Error' });
+  }
+});
+
+
+// 서버 레코드 상대전적 데이터 가져오는 엔드포인트
+app.get('/opprecord', async (req, res) => {
+  try {
+    // 기존에 생성한 전역 풀을 사용
+    const connection = await pool.getConnection();
+
+    const user = req.session.user.nickname;
+    const op_player_nickname = req.query.opplayer;
+console.log(user, op_player_nickname)
+
+    // b_record 테이블에서 데이터 가져오기
+    const opprecordQuery = `
+    SELECT OrderNum, Date, Winner, win2, win3, win4, loser, lose2, lose3, lose4, wscore, lscore, AddScore
+    FROM b_record
+    WHERE
+      (win2 IS NULL AND Winner = ? AND loser = ? )
+      OR
+      (win2 IS NULL AND loser = ? AND Winner = ? )
+    ORDER BY OrderNum;
+    `
+    const opprecord = await connection.query(opprecordQuery, [user, op_player_nickname, user, op_player_nickname])
+
+    connection.release();
+
+    // 날짜 형식 포맷 변경
+    const formattedRecords = opprecord.map(record => {
+      return {
+        ...record,
+        Date: new Intl.DateTimeFormat('en-US', {
+          year: 'numeric',
+          month: '2-digit',
+          day: '2-digit'
+        }).format(new Date(record.Date))
+      };
+    });
+console.log('상대전적 보내기 확인')
+    res.json(formattedRecords);
+  } catch (error) {
+    console.error('기록 불러오기 실패:', error);
     res.status(500).json({ error: '서버 오류' });
   }
 });

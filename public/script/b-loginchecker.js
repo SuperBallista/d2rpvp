@@ -10,12 +10,20 @@ const nickname = document.querySelector('.shownickname')
 nickname.textContent = data.user.nickname;
 const hidelabel = document.querySelector('.nav__logouted');
 hidelabel.style.display = 'none';
+if(data.user.nickname=="admin"){
+
+}
+else{
+  const adminpage = document.querySelector('.nav__logined__admin')
+  adminpage.style.display='none';
+}
+
 
 } else {
       console.log('사용자는 로그인하지 않았습니다.');
       const hidelabel = document.querySelector('.nav__logined');
       hidelabel.style.display = 'none';
-      
+
 
     }
   };

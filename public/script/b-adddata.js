@@ -15,6 +15,15 @@ const checkSession = async () => {
     hidelabel.style.display = 'none';
     const hidetext = document.querySelector('.regi-logout');
     hidetext.style.display = 'none';
+    if(userNickname=="admin"){
+
+    }
+    else{
+      const adminpage = document.querySelector('.nav__logined__admin')
+      adminpage.style.display="none";
+    }
+    
+
 
   } else {
     console.log('사용자는 로그인하지 않았습니다.');

@@ -14,7 +14,6 @@ async function fetchDataFromServer() {
     }
   }
 
-
 // 서버에서 데이터 가져와서 표에 추가하는 함수
 async function updateTableFromServer() {
   try {
@@ -23,7 +22,9 @@ async function updateTableFromServer() {
     // 가져온 데이터를 표에 추가
     const table = document.querySelector('.main-table');
     data.forEach((rowData, index, array) => {
-      addDataToTable(table, rowData, index, array.length);
+      // 데이터에 9번째와 10번째 열이 없을 경우 0으로 채워서 보내줍니다.
+      const modifiedRowData = rowData.concat([0, 0]);
+      addDataToTable(table, modifiedRowData, index, array.length);
     });
   } catch (error) {
     console.error('표 갱신 오류:', error);
@@ -39,7 +40,18 @@ function addDataToTable(table, rowData, index, totalRows) {
   rowData.forEach((cellData, columnIndex) => {
     const cell = row.insertCell();
 
-    if (columnIndex === 0) {
+    if (columnIndex === 6 || columnIndex === 7) {
+      // 7번째 열 또는 8번째 열인 경우 합을 구하고 현재 열에 표시
+      cell.textContent = cellData;
+    } else if (columnIndex === 8) {
+      // 9번째 열인 경우 7번째 값과 8번째 값의 합으로 설정
+      const sum7th8thColumn = rowData[6] + rowData[7];
+      cell.textContent = sum7th8thColumn;
+    } else if (columnIndex === 9) {
+      // 10번째 열인 경우 7번째 값을 9번째 값으로 나눈 것을 백분위로 표시
+      const tenthCellValue = rowData[6] + rowData[7] === 0 ? 0 : (rowData[6] / (rowData[6] + rowData[7])) * 100;
+      cell.textContent = tenthCellValue.toFixed(2) + "%";
+    } else if (columnIndex === 0) {
       // 1번째 열의 값을 기준으로 이미지를 표시
       const img = document.createElement('img');
       const rank = index + 1; // 순위 값은 1부터 시작
@@ -56,6 +68,11 @@ function addDataToTable(table, rowData, index, totalRows) {
     }
   });
 }
+
+
+
+
+
 
 // 상위 %를 기반으로 이미지 경로를 반환하는 함수
 function getRankImagePath(percentage) {
