@@ -1,0 +1,26 @@
+<html>
+  <head>
+    <link rel="icon" href="icon/favicon.ico" type="image/x-icon" />
+
+    <title>디아블로2 mpk</title>
+    <link rel="stylesheet" href="css/style.css" />
+  </head>
+  <body>
+    <h4>닉네임과 등록한 이메일 주소를 입력하세요</h4>
+    <main class="changepwmain">
+      <form action="/process_emailpw" method="POST" class="emailpw">
+        <div class="changepw__nickname">
+          닉네임
+          <input type="text" class="nickname" name="nickname" required />
+        </div>
+        <div class="changepw__email">
+          이메일 <input type="text" class="email" name="email" required />
+        </div>
+        <input type="submit" value="확인" class="changeok" />
+      </form>
+    </main>
+    <div class="mainlink"><a href="m-login.html">돌아가기</a></div>
+
+    <script src="script/m-findpw.js"></script>
+  </body>
+</html>

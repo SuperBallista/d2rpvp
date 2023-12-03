@@ -1,0 +1,33 @@
+<!-- HTML 부분 수정 -->
+<html>
+  <head>
+    <link rel="icon" href="icon/favicon.ico" type="image/x-icon" />
+    <title>디아블로2 mpk</title>
+    <link rel="stylesheet" href="css/style.css" />
+  </head>
+  <body>
+    <h4>로그인합니다</h4>
+    <main>
+      <div class="login-div">
+        <form id="loginForm" onsubmit="return loginUser()">
+          <span
+            >계정 <input type="text" class="nickname" name="nickname" required
+          /></span>
+          <span
+            >암호
+            <input
+              type="password"
+              class="newpw"
+              name="password"
+              required /></span
+          ><span>
+            <input type="submit" value="로그인" class="login-button"
+          /></span>
+        </form>
+      </div>
+    </main>
+    <div class="findpw"><a href="m-findpw.html">계정찾기</a></div>
+    <div class="mainlink"><a href="m-main.html">돌아가기</a></div>
+    <script src="script/m-login.js"></script>
+  </body>
+</html>
