@@ -13,18 +13,19 @@ function isValidEmail(email) {
     let nickname = document.querySelector('.nickname').value;
     nickname = nickname.toString().toLowerCase();
 
+    
     if (isValidEmail(email)) {
       console.log('email checked');
   
       // 임시 암호 메일 변경 요청 보내기
       try {
-        const response = await fetch('/process_emailpw', {
+        const response = await fetch('/process_emailpw_m', {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',
           },
           body: JSON.stringify({
-            findpw_nickname: LOWER(nickname),
+            findpw_nickname: nickname + '_m',
             findpw_email: email,
           }),
         });
@@ -38,7 +39,7 @@ function isValidEmail(email) {
   
         // 이메일로 암호 요청 성공시 사용자에게 알림
         alert('임시 비밀번호를 생성했습니다. 관리자에게 문의 바랍니다.');
-        window.location.href = 'b-main.html';
+        window.location.href = 'm-main.html';
       } catch (error) {
         console.error('암호 전송 요청 오류', error);
         // 이메일 변경 실패 시 사용자에게 알림

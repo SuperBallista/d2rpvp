@@ -1,3 +1,4 @@
+// JavaScript
 // 이메일 주소 확인 함수
 function isValidEmail(email) {
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
@@ -5,27 +6,26 @@ function isValidEmail(email) {
   }
   
   // 폼 submit 이벤트 리스너 등록
-  document.querySelector('.emailpw').addEventListener('submit', async function (event) {
+  document.querySelector('.changeemail-form').addEventListener('submit', async function (event) {
     event.preventDefault(); // 기본 폼 제출 동작 막기
   
     // 폼 요소 값 가져오기
-    const email = document.querySelector('.email').value;
-    let nickname = document.querySelector('.nickname').value;
-    nickname = nickname.toString().toLowerCase();
+    const currentPassword = document.querySelector('.nowpw').value;
+    const newemail = document.querySelector('.newemail').value;
 
-    if (isValidEmail(email)) {
+    if (isValidEmail(newemail)) {
       console.log('email checked');
   
-      // 임시 암호 메일 변경 요청 보내기
+      // 서버로 이메일 변경 요청 보내기
       try {
-        const response = await fetch('/process_emailpw', {
+        const response = await fetch('/process_changeemail_m', {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',
           },
           body: JSON.stringify({
-            findpw_nickname: LOWER(nickname),
-            findpw_email: email,
+            nowpw: currentPassword,
+            newemail: newemail,
           }),
         });
   
@@ -36,13 +36,13 @@ function isValidEmail(email) {
         const result = await response.json();
         console.log(result); // 서버에서의 응답 로그
   
-        // 이메일로 암호 요청 성공시 사용자에게 알림
-        alert('임시 비밀번호를 생성했습니다. 관리자에게 문의 바랍니다.');
-        window.location.href = 'b-main.html';
+        // 이메일 변경 성공 시 사용자에게 알림
+        alert('이메일이 성공적으로 변경되었습니다.');
+        window.location.href = 'm-mypage.html';
       } catch (error) {
-        console.error('암호 전송 요청 오류', error);
+        console.error('이메일 변경 오류:', error);
         // 이메일 변경 실패 시 사용자에게 알림
-        alert('닉네임 혹은 이메일이 틀렸거나 서버가 응답하지 않습니다');
+        alert('이메일 변경에 실패했습니다. 다시 시도해주세요.');
       }
     } else {
       alert('올바르지 않은 이메일 형식입니다.');

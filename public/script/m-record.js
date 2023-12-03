@@ -6,7 +6,7 @@ async function logoutUser() {
     const data = await response.json();
 
     if (data.success) {
-      console.log('mpk 계정 로그아웃');
+      console.log('babapk 계정 로그아웃');
 
 
   } else {
@@ -29,9 +29,9 @@ const checkSession = async () => {
       console.log('사용자 닉네임:', data.user.nickname);
       userNickname = data.user.nickname;
       const nickname = document.querySelector('.shownickname');
-      nickname.textContent = data.user.nickname;
+      nickname.textContent = data.user.nickname.replace('_m','');
 
-      if(data.user.nickname.includes('_')){
+      if(!data.user.nickname.includes('_')){
         logoutUser()
         location.reload();
       }
@@ -71,8 +71,9 @@ const updateUI = () => {
   if (userNickname) {
     // 사용자가 로그인 상태
     hidelabel.style.display = 'none';
-    adminRemove.style.display = userNickname === 'admin' ? 'block' : 'none';
-    adminshow.style.display = userNickname === 'admin' ? 'block' : 'none';
+    adminRemove.style.display = userNickname === 'admin_m' ? 'block' : 'none';
+    adminshow.style.display = userNickname === 'admin_m' ? 'block' : 'none';
+
   } else {
     // 사용자가 로그아웃 상태
     hidelabel.style.display = 'flex';
@@ -85,7 +86,7 @@ const updateUI = () => {
 
 async function getNicknamesFromServer() {
     try {
-        const response = await fetch('/api/getNicknames'); // 적절한 엔드포인트로 수정해야 합니다.
+        const response = await fetch('/api/getNicknames_m'); // 적절한 엔드포인트로 수정해야 합니다.
         if (!response.ok) {
             throw new Error('서버 응답 오류');
         }
@@ -113,7 +114,7 @@ async function fillPlayerSelectBoxes() {
                 if (nickname !== myNickname) {
                     const option = document.createElement('option');
                     option.value = nickname;
-                    option.textContent = nickname;
+                    option.textContent = nickname.replace('_m','');
                     selectBox.appendChild(option);
                 }
             });
@@ -132,7 +133,7 @@ fillPlayerSelectBoxes();
 // 서버에서 레코드 데이터 가져오는 함수
 async function fetchDataFromServer() {
     try {
-        const response = await fetch('/recorddata'); // 서버 엔드포인트 수정
+        const response = await fetch('/recorddata_m'); // 서버 엔드포인트 수정
         if (!response.ok) {
             throw new Error('서버 응답 오류');
         }
@@ -162,24 +163,29 @@ async function updateTableFromServer() {
         // 오류 처리를 수행할 수 있음
     }
 }
+
 // 표에 데이터를 추가하는 함수
 function addDataToTable(table, rowData) {
   const row = table.insertRow();
 
   // 데이터 삽입
   Object.values(rowData).forEach((cellData, index) => {
-      const cell = row.insertCell();
-      cell.textContent = cellData;
-
-      // 데이터가 마지막 열이면서 마지막 행인 경우
-      if (index === Object.values(rowData).length - 1) {
-          // 관리자(admin)인 경우에만 삭제 버튼 열 추가
-          if (userNickname === "admin") {
-              addDeleteButtonToRow(row, rowData);
-          }
+    const cell = row.insertCell();
+    cell.textContent = cellData !== undefined && index >= 2 && index <= 9 ? cellData.replace('_m', '') : cellData;
+    // 데이터가 마지막 열이면서 마지막 행이 아닌 경우
+    if (index === Object.values(rowData).length - 1 && row.rowIndex !== table.rows.length - 1) {
+      // 관리자(admin)인 경우에만 삭제 버튼 열 추가
+      if (userNickname === "admin_m") {
+        addDeleteButtonToRow(row, rowData);
       }
+    }
   });
 }
+
+
+
+
+
 // 삭제 버튼을 행에 추가하는 함수
 function addDeleteButtonToRow(row, rowData) {
   const deleteButtonCell = row.insertCell();
@@ -191,7 +197,7 @@ function addDeleteButtonToRow(row, rowData) {
           const orderNum = rowData.OrderNum;
 
           // 서버에 삭제 요청 보내기
-          const response = await fetch('/delete-row', {
+          const response = await fetch('/delete-row_m', {
               method: 'DELETE',
               headers: {
                   'Content-Type': 'application/json',
@@ -220,6 +226,7 @@ function addDeleteButtonToRow(row, rowData) {
 }
 
 
+
 // 테이블 업데이트 함수 호출
 updateTableFromServer();
 
@@ -239,7 +246,7 @@ async function handleOpRecordClick(event) {
     const opplayer = document.querySelector('.player').value;
 
     // 서버에 데이터를 전송하는 fetch API 사용
-    const response = await fetch(`/opprecord?opplayer=${opplayer}`, {
+    const response = await fetch(`/opprecord_m?opplayer=${opplayer}`, {
       method: 'GET',
       headers: {
         'Content-Type': 'application/json',
@@ -288,6 +295,7 @@ function removeAllRows(table) {
   }
 }
 
+
 // 표에 데이터를 추가하는 함수
 function addDataToTable(table, rowData) {
   const row = table.insertRow();
@@ -295,17 +303,18 @@ function addDataToTable(table, rowData) {
   // 데이터 삽입
   Object.values(rowData).forEach((cellData, index) => {
     const cell = row.insertCell();
-    cell.textContent = cellData;
+    cell.textContent = cellData !== null && index >= 2 && index <= 9 ? cellData.replace('_m', '') : cellData;
 
     // 데이터가 마지막 열이면서 마지막 행인 경우
     if (index === Object.values(rowData).length - 1) {
       // 관리자(admin)인 경우에만 삭제 버튼 열 추가
-      if (userNickname === 'admin') {
+      if (userNickname === 'admin_m') {
         addDeleteButtonToRow(row, rowData);
       }
     }
   });
 }
+
 
 // 테이블 업데이트 함수 호출
 updateTableFromServer();

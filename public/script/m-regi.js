@@ -23,7 +23,7 @@ document.addEventListener('DOMContentLoaded', function () {
             wgrade: wgrade.value
         };
 
-        fetch('/process_regi', {
+        fetch('/process_regi_m', {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',
@@ -37,12 +37,12 @@ document.addEventListener('DOMContentLoaded', function () {
                 // 예시: 성공했을 때의 처리
                 if (data.success) {
                     alert('계정 등록이 완료되었습니다.');
-window.location.href = 'b-main.html';
+window.location.href = 'm-main.html';
 
 
                 } else {
                     alert('계정 등록에 실패하였습니다.');
-                    window.location.href = 'b-regi.html';
+                    window.location.href = 'm-regi.html';
                 }
             })
             .catch(error => {
@@ -59,13 +59,9 @@ window.location.href = 'b-main.html';
         alert('닉네임을 입력하세요.');
         return;
       }
-      if (nickname.includes("_")) {
-alert('_는 사용할 수 없습니다')
-return;
-
-      }  
+  
       // 서버로 닉네임 중복 확인 요청 보내기
-      fetch('/check-nickname', {
+      fetch('/check-nickname_m', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',

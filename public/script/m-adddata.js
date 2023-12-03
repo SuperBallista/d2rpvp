@@ -6,7 +6,7 @@ async function logoutUser() {
     const data = await response.json();
 
     if (data.success) {
-      console.log('mpk 계정 로그아웃');
+      console.log('babapk 계정 로그아웃');
 
 
   } else {
@@ -20,13 +20,20 @@ async function logoutUser() {
 
 // 로그인 후 세션 확인
 const checkSession = async () => {
-  const response = await fetch('/check-session'); // 서버에서 세션을 확인하는 엔드포인트
+  const response = await fetch('/check-session_m'); // 서버에서 세션을 확인하는 엔드포인트
   const sdata = await response.json();
 
   if (sdata.isLoggedIn) {
+
+
+    if(!sdata.user.nickname.includes('_')){
+      logoutUser()
+      location.reload();
+    }
+
     console.log('사용자는 로그인 상태입니다.');
     console.log('사용자 닉네임:', sdata.user.nickname);
-    userNickname = sdata.user.nickname; // 전역 변수에 닉네임 할당
+    userNickname = sdata.user.nickname.replace("_m", ""); // 전역 변수에 닉네임 할당
     const nickname = document.querySelector('.shownickname');
     nickname.textContent = userNickname;
     const hidelabel = document.querySelector('.nav__logouted');
@@ -39,10 +46,6 @@ const checkSession = async () => {
     else{
       const adminpage = document.querySelector('.nav__logined__admin')
       adminpage.style.display="none";
-    }
-    if(sdata.user.nickname.includes('_')){
-      logoutUser()
-      location.reload();
     }
 
 
@@ -75,7 +78,7 @@ checkSession();
 // 이 함수는 서버에서 Nickname 목록을 가져오는 역할을 합니다.
 async function getNicknamesFromServer() {
     try {
-      const response = await fetch('/api/getNicknames'); // 적절한 엔드포인트로 수정해야 합니다.
+      const response = await fetch('/api/getNicknames_m'); // 적절한 엔드포인트로 수정해야 합니다.
       if (!response.ok) {
         throw new Error('서버 응답 오류');
       }
@@ -93,7 +96,7 @@ async function getNicknamesFromServer() {
 async function fillPlayerSelectBoxes() {
   try {
     const nicknames = await getNicknamesFromServer();
-    const myNickname = userNickname;
+    const myNickname = userNickname+'_m';
 
     const winnerSelectBox = document.querySelector('.winner');
     const win2Selectbox = document.querySelector('.winner2');
@@ -103,6 +106,7 @@ async function fillPlayerSelectBoxes() {
     const lose3Selectbox = document.querySelector('.loser3');
     const lose4Selectbox = document.querySelector('.loser4');
 
+
     // 선택 박스 채우는 함수
     const fillSelectBox = (selectBox) => {
       nicknames.forEach((nickname) => {
@@ -110,7 +114,7 @@ async function fillPlayerSelectBoxes() {
         if (nickname !== myNickname) {
           const option = document.createElement('option');
           option.value = nickname;
-          option.textContent = nickname;
+          option.textContent = nickname.replace("_m", "");
           selectBox.appendChild(option);
         }
       });
@@ -215,7 +219,6 @@ document.querySelector('.submitrecord').addEventListener('click', async () => {
         console.log(hasDuplicates);
 
         if (hasDuplicates) {
-            console.log("b");
             alert('선수 기록에 중복된 값이 있습니다.');
             return;
         } else {
@@ -223,7 +226,7 @@ document.querySelector('.submitrecord').addEventListener('click', async () => {
             const jsonData = JSON.stringify(formDataObject);
 
             // 서버에 데이터 전송
-            const response = await fetch('/submitrecord', {
+            const response = await fetch('/submitrecord_m', {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
@@ -270,7 +273,7 @@ function checkForDuplicates(formDataObject) {
 // 비동기적으로 서버에서 데이터를 가져오는 함수
 async function fetchData() {
   try {
-    const response = await fetch('no_approved_record');
+    const response = await fetch('no_approved_record_m');
     const data = await response.json();
     return data;
   } catch (error) {
@@ -343,7 +346,7 @@ async function displayData() {
 async function deleteRecord(order) {
   try {
     console.log(order)
-    const response = await fetch('/delete-record', {
+    const response = await fetch('/delete-record_m', {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
@@ -354,7 +357,7 @@ async function deleteRecord(order) {
 
     if (response.ok) {
       console.log('삭제 성공');
-      window.location.href = 'b-adddata.html';
+      window.location.href = 'm-adddata.html';
 
     } else {
       console.error('삭제 실패');
@@ -370,7 +373,7 @@ async function deleteRecord(order) {
 async function approveRecord(order) {
   try {
     console.log(order)
-    const response = await fetch('/approve-record', {
+    const response = await fetch('/approve-record_m', {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
@@ -381,7 +384,7 @@ async function approveRecord(order) {
 
     if (response.ok) {
       console.log('승인 성공');
-      window.location.href = 'b-adddata.html';
+      window.location.href = 'm-adddata.html';
 
     } else {
       console.error('승인 실패');

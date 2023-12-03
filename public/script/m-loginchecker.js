@@ -24,36 +24,37 @@ const checkSession = async () => {
     const data = await response.json();
   
     if (data.isLoggedIn) {
-      // 사용자가 로그인한 경우
       console.log('사용자는 로그인 상태입니다.');
       console.log('사용자 닉네임:', data.user.nickname);
-      const nickname = document.querySelector('.shownickname')
-      nickname.textContent = data.user.nickname;
-      const hidelabel = document.querySelector('.nav__logouted');
-      hidelabel.style.display = 'none';
-      if(data.user.nickname=="admin"){
-    
-      }
-      else{
-        const adminpage = document.querySelector('.nav__logined__admin')
-        adminpage.style.display='none';
-              }
+const nickname = document.querySelector('.shownickname')
+nickname.textContent = data.user.nickname.replace('_m','');
+const hidelabel = document.querySelector('.nav__logouted');
+hidelabel.style.display = 'none';
+
 if(data.user.nickname.includes('_')){
+}else{
   logoutUser()
   location.reload();
 }
-      
-    } else {
-      // 사용자가 로그인하지 않은 경우
+
+
+if(data.user.nickname=="admin_m"){
+
+}
+else{
+  const adminpage = document.querySelector('.nav__logined__admin')
+  adminpage.style.display='none';
+}
+
+} else {
       console.log('사용자는 로그인하지 않았습니다.');
       const hidelabel = document.querySelector('.nav__logined');
       hidelabel.style.display = 'none';
 
+
     }
   };
   
-
   // 로그인 후 바로 세션 확인
   checkSession();
   
-
